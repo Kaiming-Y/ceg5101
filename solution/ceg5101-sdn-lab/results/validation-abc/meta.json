@@ -1,0 +1,27 @@
+{
+  "args": {
+    "scenarios": "a,b,c",
+    "baseline": 40,
+    "attack": 25,
+    "recover": 45,
+    "iperf_rate": "10M",
+    "attack_size": 1000,
+    "out": "results/validation-abc",
+    "controller": "auto",
+    "ryu_manager": "/tmp/claude-0/ryuenv/bin/ryu-manager",
+    "controller_ip": "127.0.0.1",
+    "controller_port": 6633,
+    "datapath": "auto",
+    "delay": "auto",
+    "plot_python": "/tmp/claude-0/ryuenv/bin/python",
+    "cli": false
+  },
+  "datapath": "user",
+  "delay_emulated": false,
+  "started": "2026-10-22 11:52:53 UTC",
+  "pingall_loss_pct": [
+    0.0,
+    0.0
+  ],
+  "finished": "2026-10-22 11:57:28 UTC"
+}

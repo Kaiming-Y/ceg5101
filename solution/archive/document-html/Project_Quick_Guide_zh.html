@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CA2 项目速读：异常感知的路由与封禁控制器</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">body{font-family:"WenQuanYi Zen Hei","Noto Sans CJK SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;max-width:880px;margin:28px auto;padding:0 20px;line-height:1.65;font-size:15px;color:#111;background:#fff}
+h1{font-size:26px} h2{font-size:20px;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:4px}
+table{border-collapse:collapse;margin:10px 0;font-size:14px} th,td{border:1px solid #ccc;padding:5px 8px;vertical-align:top} th{background:#f3f3f1}
+code{background:#f3f3f1;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#f3f3f1;padding:10px;overflow-x:auto} pre code{padding:0}
+blockquote{color:#444;border-left:4px solid #2a78d6;margin-left:0;padding-left:12px}
+@media print{h2{break-after:avoid} table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CA2 项目速读：异常感知的路由与封禁控制器</h1>
+</header>
+<blockquote>
+<p>读完这份文档（约 15
+分钟），你应该能说清：题目要做什么、网络长什么样、控制器每 2
+秒做了哪几件事、实验怎么做、关键数字是多少、文件在哪。细节查
+<code>report/report.pdf</code>（最终报告，16 页）和
+<code>PLAN.md</code>。</p>
+</blockquote>
+<h2 id="一句话">1. 一句话</h2>
+<p>我们写了一个 Ryu SDN 控制器：<strong>发现 ICMP 洪泛攻击 →
+在所有交换机上封掉攻击源 → 把被攻击链路的代价调高 →
+让共用这条链路的合法流量临时绕行，攻击结束后再回来。</strong></p>
+<p>题目（CEG5101 CA2，满分 30）分 5 个任务：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>任务</th>
+<th>分值</th>
+<th>要做什么</th>
+<th>我们的结果在哪</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>T1 拓扑</td>
+<td>5</td>
+<td>在 MiniEdit 里搭出给定拓扑并运行</td>
+<td>报告第 2 节，图 1、图 2；<code>miniedit/my_topology.mn</code></td>
+</tr>
+<tr class="even">
+<td>T2 检测与封禁</td>
+<td>5</td>
+<td>统计每个源的速率，用 EMA 基线检测异常，封掉攻击源</td>
+<td>报告第 3.2 节、第 5.1 节</td>
+</tr>
+<tr class="odd">
+<td>T3 动态代价</td>
+<td>10</td>
+<td>链路代价随负载和“是否被攻击”变化</td>
+<td>报告第 3.3 节、第 6.2 节</td>
+</tr>
+<tr class="even">
+<td>T4 改路由</td>
+<td>10</td>
+<td>合法流量绕开被攻击链路（case a/b/c）</td>
+<td>报告第 3.4 节、第 5 节</td>
+</tr>
+<tr class="odd">
+<td>T5 性能评估</td>
+<td>—</td>
+<td>拓扑截图 + 代价、丢包、吞吐随时间的图 + 解释</td>
+<td>报告第 6 节（fig1–fig5），扩展实验在第 7 节</td>
+</tr>
+</tbody>
+</table>
+<p>评分看三点：概念理解、设计推理、结果解读。</p>
+<h2 id="网络">2. 网络</h2>
+<ul>
+<li>6 台交换机 s1–s6，每台挂一台主机（hi 接 si，IP
+10.0.0.i/24）。主机链路 40 Mbps、15 ms。</li>
+<li>11 条交换机之间的链路，都是 40 Mbps，<strong>时延（ms）就是静态代价
+C0</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th>链路</th>
+<th>C0</th>
+<th>链路</th>
+<th>C0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>s1-s2</td>
+<td>5</td>
+<td>s2-s5</td>
+<td>12</td>
+</tr>
+<tr class="even">
+<td>s2-s4</td>
+<td>6</td>
+<td>s2-s6</td>
+<td>14</td>
+</tr>
+<tr class="odd">
+<td>s3-s6</td>
+<td>7</td>
+<td>s4-s5</td>
+<td>15</td>
+</tr>
+<tr class="even">
+<td>s1-s4</td>
+<td>8</td>
+<td>s1-s5</td>
+<td>18</td>
+</tr>
+<tr class="odd">
+<td>s3-s5</td>
+<td>9</td>
+<td>s5-s6</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>s2-s3</td>
+<td>10</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>我们保护的合法流：<strong>h1→h6</strong>，最短路 s1-s2-s6（代价
+19），备用 s1-s2-s3-s6（22，只贵 3）。</li>
+<li>三种攻击（hping3 ICMP 洪泛，约 4,800 包/秒，打满 40 Mbps）：</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>case</th>
+<th>攻击</th>
+<th>实际走的链路</th>
+<th>和 h1→h6 共用吗</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td>h2→h3</td>
+<td>s2-s3</td>
+<td>不共用 → 不该改路由</td>
+</tr>
+<tr class="even">
+<td>b</td>
+<td>h2→h6</td>
+<td><strong>s2-s6</strong></td>
+<td><strong>共用</strong> → 应该改路由（全场的主角）</td>
+</tr>
+<tr class="odd">
+<td>c</td>
+<td>h5→h6</td>
+<td>s5-s3-s6（16 比直连 s5-s6 的 20 便宜）</td>
+<td>不共用 → 不该改路由</td>
+</tr>
+</tbody>
+</table>
+<h2 id="控制器每-2-秒做什么">3. 控制器每 2 秒做什么</h2>
+<p>代码：<code>controller/integrated_controller.py</code>（Ryu 应用）+
+<code>controller/sdn_logic.py</code>（参数、代价公式、Dijkstra、检测器，不依赖
+Ryu，有 18
+个单元测试）。它合并了老师给的两份参考代码：一份会选路但看不见攻击，一份会封禁但不会挪流量。</p>
+<p>一个循环 = <strong>测量 → 检测 → 定价 → 选路</strong>，每 2
+秒一次（实际间隔 2.4 秒：等 2 秒，再等 0.4 秒收统计回复）。</p>
+<ol type="1">
+<li><strong>测量</strong>
+<ul>
+<li>FlowStats：每个源在它的入口交换机上的包速率（pkt/s）。<strong>不统计
+ICMP echo reply</strong>，否则被攻击的 h6
+会因为回包太多而被当成攻击者。</li>
+<li>PortStats：每条链路的速率 R（EMA 平滑）。</li>
+</ul></li>
+<li><strong>检测</strong>（T2）
+<ul>
+<li>每个源有一个 EMA 基线 b（权重 0.3）和波动 σ。</li>
+<li>阈值 <strong>T = max(3b, b + 4σ, 500 pkt/s)</strong>：3b
+是题目给的规则，b+4σ 跟着这个源自己的波动走，500 是下限。</li>
+<li><strong>先比较，再更新基线</strong>，异常样本不学进基线。参考代码是先更新再比较，实际阈值会变成约
+21 倍。</li>
+<li>每个源最开始的 5
+个样本只学习、不报警（warm-up）。有链路时延时，实验脚本自动改成 12
+个样本（见第 6 节）。</li>
+</ul></li>
+<li><strong>封禁</strong>
+<ul>
+<li>超过阈值的源：在<strong>全部 6 台交换机</strong>装优先级 5000 的
+drop 规则（按源 IP 匹配）。</li>
+<li>攻击停止、安静 10 秒后自动解封。</li>
+</ul></li>
+<li><strong>定价</strong>（T3）
+<ul>
+<li><strong>C = C0 + α·R/Rmax + β·A</strong>，α = 10，β = 30，Rmax = 40
+Mbps。</li>
+<li>A = 1 表示这条链路被攻击源走过。只要攻击者还在撞 drop 规则（速率 ≥
+0.5T），A 就保持 1，停了之后再保持 10 秒。</li>
+<li>负载项在封禁后几个周期就消失了，<strong>β·A
+是“记忆”</strong>，它让被攻击链路在攻击期间一直很贵：s2-s6 的平台值 =
+(14+30)/14 = <strong>3.14×</strong>。</li>
+</ul></li>
+<li><strong>选路</strong>（T4）
+<ul>
+<li>每个流比较“留在当前路径”和“最好的备选路径”。</li>
+<li><strong>what-if</strong>：评估备选路径时，把这个流自己的负载加到它还没走的链路上，避免来回振荡。</li>
+<li>备选要便宜<strong>超过 2</strong>（margin）才换。</li>
+<li><strong>先装出口、再装入口</strong>（s6 → s3 → s2 →
+s1），换路时不丢包。</li>
+</ul></li>
+<li><strong>其他</strong>
+<ul>
+<li>ARP
+由控制器代答，广播只发给主机端口，所以网状拓扑不需要生成树，也不会有广播风暴。</li>
+<li>LLDP 发现全部 11
+条链路后才开始转发；首次发现完整后就锁定“已就绪”，否则断一条链路会导致全网
+ARP 失效（D13，断链实验发现的 bug）。</li>
+</ul></li>
+</ol>
+<p>设计决策 D1–D14 的完整列表（问题 → 做法 → 理由）在
+<code>PLAN.md</code> 第 1 节。</p>
+<h2 id="实验怎么做">4. 实验怎么做</h2>
+<p><code>experiments/run_experiment.py</code> 一条命令跑完：</p>
+<ol type="1">
+<li>起 Ryu 和 Mininet，<code>pingall</code> 两次让所有主机被学到。</li>
+<li>h1→h6 发 10 Mbps UDP（iperf，约 890 包/秒），h1 每 0.5 秒 ping 一次
+h6（测 RTT）；h2–h6 各有一路 1 pps 的背景
+ping（给检测器建立基线）。</li>
+<li>时间线：基线 40 秒 → case a 洪泛 25 秒 → 恢复 45 秒 → case b → 恢复
+→ case c → 恢复，共约 255 秒。</li>
+<li>独立测量：h6 的 iperf 每秒报告（丢包、吞吐）、ping（RTT）、h6 上的
+tcpdump（攻击包有没有漏进来）、流表 dump、控制器自己的 CSV 日志。</li>
+<li><code>analysis/plot_results.py</code> 画 fig1–fig5，生成
+<code>summary.md</code>。</li>
+</ol>
+<p>做了哪些运行：</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>运行</th>
+<th>环境</th>
+<th>目录</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>R1、R2、R3</td>
+<td>云端容器（OVS 用户态、没有链路时延）。报告的主要数字来自这里</td>
+<td><code>results/validation-abc</code>、<code>run1-abc</code>、<code>run2-abc</code></td>
+</tr>
+<tr class="even">
+<td>β 实验</td>
+<td>β = 0 和 β = 2，只跑 case b</td>
+<td><code>results/exp-beta0-b</code>、<code>exp-beta2-b</code></td>
+</tr>
+<tr class="odd">
+<td>case c 覆盖</td>
+<td>把 s5-s6 的 C0 改成 8，让攻击真的走 s5-s6</td>
+<td><code>results/exp-c-s5s6-cost8</code></td>
+</tr>
+<tr class="even">
+<td>断链</td>
+<td>s2-s6 断 20 秒</td>
+<td><code>results/exp-linkfail-s2s6</code></td>
+</tr>
+<tr class="odd">
+<td>VM 重跑</td>
+<td>官方 Mininet 2.3.0 VM，内核态 OVS + 真实链路时延</td>
+<td><code>results/vm-delay-abc</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="关键数字背熟这些">5. 关键数字（背熟这些）</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>检测延迟（9 次洪泛）</td>
+<td><strong>1.5–3.8 秒</strong>（1–2 个采样周期）</td>
+</tr>
+<tr class="even">
+<td>封禁后</td>
+<td>封禁 1 秒之后<strong>没有任何攻击包</strong>到达受害者</td>
+</tr>
+<tr class="odd">
+<td>case b 检测前最坏一秒丢包</td>
+<td><strong>48.4%</strong>（R1），三次运行 48.4 / 56.6 / 34.4%</td>
+</tr>
+<tr class="even">
+<td>R1 case b 检测前逐秒丢包</td>
+<td>24 / 47 / 48 / 27%</td>
+</tr>
+<tr class="odd">
+<td>检测前以外</td>
+<td>h1→h6 始终 10.5 Mbps、0% 丢包</td>
+</tr>
+<tr class="even">
+<td>改路由</td>
+<td>只有 case b 改，就在封禁那一刻；留下代价 58.8 vs 换走 30.0</td>
+</tr>
+<tr class="odd">
+<td>回切</td>
+<td>洪泛结束后约 14 秒（13.6–14.9 秒），比较值 24.5 vs
+30.1；每次运行正好 2 次改路由</td>
+</tr>
+<tr class="even">
+<td>代价平台</td>
+<td>s2-s3 4.0×、s2-s6 3.14×、s3-s5 4.33×、s3-s6 5.29×，即
+(C0+30)/C0</td>
+</tr>
+<tr class="odd">
+<td>β 实验</td>
+<td>β = 0 或 2 时不改路由，但封禁后丢包同样是 0 → <strong>止损靠封禁，β
+防的是封禁漏掉的流量</strong>（如伪造源）</td>
+</tr>
+<tr class="even">
+<td>断链</td>
+<td>7 毫秒内改路由，71,515 个包只丢 11 个</td>
+</tr>
+<tr class="odd">
+<td>VM（有时延）</td>
+<td>RTT 基线 99.8 ms（推算 98），绕行 109 ms；检测 2.2 / 1.6 / 3.8
+秒，行为和容器一致</td>
+</tr>
+</tbody>
+</table>
+<p><strong>全场主线</strong>：所有丢包都发生在检测前那 1.5–3.8
+秒里；封禁结束丢包，β
+让流量离开被攻击的链路，滞后机制让它只回切一次。</p>
+<h2 id="局限被问到要主动说">6. 局限（被问到要主动说）</h2>
+<ul>
+<li>检测延迟是最弱的一环：轮询间隔 2.4
+秒，第一个样本可能只覆盖部分洪泛。</li>
+<li>按源 IP
+封禁，对伪造源或低速分布式攻击无效；那时改路由是剩下的防线。</li>
+<li>封禁期间攻击主机的正常流量也被丢掉（10 秒后自动解封）。</li>
+<li>受害者自己的接入链路（如 s6-h6）绕不开，只能靠封禁（case c）。</li>
+<li>阈值下限 500、hold 时间、β = 30
+是针对这个拓扑调出来的，不是推导出来的。</li>
+<li>warm-up：一个合法流如果在 warm-up 结束后才以高速率出现，会被误封。在
+VM 上真的发生过（带时延时 pingall 变慢，h1
+被误封），所以有时延时实验脚本自动用 12 个样本。</li>
+<li>R1–R3 在容器里跑（没有链路时延）；VM
+有真实时延，但它是软件模拟的，洪泛弱一些，丢包数字不能直接比。</li>
+</ul>
+<h2 id="文件地图">7. 文件地图</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>位置</th>
+<th>是什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>report/report.pdf</code>、<code>report.tex</code></td>
+<td>最终报告（英文，16 页）</td>
+</tr>
+<tr class="even">
+<td><code>controller/</code></td>
+<td>控制器代码</td>
+</tr>
+<tr class="odd">
+<td><code>topology/ceg_mesh_topo.py</code></td>
+<td>题目给的拓扑</td>
+</tr>
+<tr class="even">
+<td><code>miniedit/my_topology.mn</code></td>
+<td>MiniEdit
+里搭的拓扑（与题目一致）；<code>my_topology_export.py</code>
+是导出的脚本</td>
+</tr>
+<tr class="odd">
+<td><code>experiments/run_experiment.py</code></td>
+<td>一键实验</td>
+</tr>
+<tr class="even">
+<td><code>analysis/plot_results.py</code></td>
+<td>画图和汇总</td>
+</tr>
+<tr class="odd">
+<td><code>tests/test_sdn_logic.py</code></td>
+<td>18 个单元测试</td>
+</tr>
+<tr class="even">
+<td><code>results/</code></td>
+<td>每次运行的原始数据、图和 <code>summary.md</code></td>
+</tr>
+<tr class="odd">
+<td><code>scripts/setup_ubuntu.sh</code></td>
+<td>一键安装（Mininet VM / Ubuntu）</td>
+</tr>
+<tr class="even">
+<td><code>presentation/slides/</code></td>
+<td>幻灯片（单文件 HTML，图片和视频都嵌在里面，直接用 Chrome/Edge
+打开）和讲义 PDF</td>
+</tr>
+<tr class="odd">
+<td><code>presentation/script/speaker_script.pdf</code></td>
+<td>演讲稿（英文，按页）</td>
+</tr>
+<tr class="even">
+<td><code>presentation/video/</code></td>
+<td>三段视频：MiniEdit 搭建、case b 真实运行、R1 回放</td>
+</tr>
+<tr class="odd">
+<td><code>presentation/data/numbers.md</code></td>
+<td>幻灯片上每个数字的出处</td>
+</tr>
+<tr class="even">
+<td><code>demo/</code></td>
+<td>现场演示脚本（<code>live_demo.sh</code> 和四个监视窗格）</td>
+</tr>
+<tr class="odd">
+<td><code>docs/</code></td>
+<td>速读、Q&amp;A 题库、现场演示方案、技术支持（Windows / Mac）</td>
+</tr>
+<tr class="even">
+<td><code>PLAN.md</code></td>
+<td>中文执行计划和全部设计决策</td>
+</tr>
+</tbody>
+</table>
+<h2 id="自己跑一遍mininet-vm-上">8. 自己跑一遍（Mininet VM 上）</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/setup_ubuntu.sh</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RYU_MANAGER</span><span class="op">=</span>~/ryu-venv/bin/ryu-manager <span class="va">PLOT_PYTHON</span><span class="op">=</span>~/ryu-venv/bin/python</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">~/ryu-venv/bin/python</span> <span class="at">-m</span> unittest discover <span class="at">-s</span> tests      <span class="co"># 18 个测试</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-E</span> python3 experiments/run_experiment.py            <span class="co"># 约 5 分钟，结果在 results/&lt;时间戳&gt;/</span></span></code></pre></div>
+<p>现场演示（四格画面，一条命令跑完 a、b、c
+并出结果表）：<code>bash demo/live_demo.sh</code>，只跑 case b 用
+<code>bash demo/live_demo.sh quick</code>。讲解和分工见
+<code>docs/Live_Demo_Runbook_zh.pdf</code>。</p>
+<p>只想看控制器：<code>~/ryu-venv/bin/ryu-manager --observe-links controller/integrated_controller.py</code>，然后另开一个终端用
+MiniEdit 打开 <code>miniedit/my_topology.mn</code> 点 Run，在 CLI 里
+<code>pingall</code>。</p>
+<p>注意：Mininet 2.3.0 自带的 MiniEdit 在 Python 3 下 File → Save
+会存出空文件，要先把 <code>~/mininet/examples/miniedit.py</code> 里两处
+<code>open(fileName, &#39;wb&#39;)</code> 改成 <code>&#39;w&#39;</code>。</p>
+<h2 id="最可能被问的-5-个问题">9. 最可能被问的 5 个问题</h2>
+<ol type="1">
+<li><strong>为什么 β = 30？小一点会怎样？</strong> 直觉上 β
+要大于绕行多出的 3 再加 margin 2；算上本流自身负载，稳态下要大于约
+7.7。β = 0 或 2 时不改路由。30 留了很大余量，是调出来的。</li>
+<li><strong>封禁已经让丢包归零了，为什么还要改路由？</strong>
+封禁对伪造源无效；改路由保护的是封禁漏掉的流量。代价只是路径代价多
+3（单程约多 3 ms），而且只在攻击期间。</li>
+<li><strong>题目说 case c 打 s5-s6，为什么你们标记的是 s3-s5、s3-s6，h1
+也没改路由？</strong> 按 C0，h5→h6 走 s5-s3-s6（16 &lt;
+20），我们标记的就是攻击真正走过的链路；它们不在 h1→h6
+上，所以不改路由是对的。把 s5-s6 改成 8 的实验里攻击确实走了 s5-s6，h1
+仍然不动。</li>
+<li><strong>为什么重写了 C0 表？</strong> 参考代码的代价表对应一个 4
+交换机拓扑，和我们的 6 交换机网格冲突（还缺 7 条链路）。我们保留“C0 =
+链路时延”的原则，为 11 条链路重写了表。</li>
+<li><strong>检测延迟从哪来，怎么缩短？</strong> 2.4 秒一次轮询，要 1–2
+个样本；缩短可以用更快的轮询或 sFlow 采样，代价是控制开销和误报。</li>
+</ol>
+<p>完整的 26 题题库（英文答案 + 证据位置）在演示设计文档第 9 节。</p>
+</body>
+</html>

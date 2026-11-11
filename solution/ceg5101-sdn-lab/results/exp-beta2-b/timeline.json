@@ -1,0 +1,41 @@
+{
+  "marks": [
+    {
+      "name": "topology_ready",
+      "t": 1792674835.2889152
+    },
+    {
+      "name": "iperf_start",
+      "t": 1792674836.5068147
+    },
+    {
+      "name": "baseline_start",
+      "t": 1792674836.5164354
+    },
+    {
+      "scenario": "b",
+      "name": "attack_start",
+      "t": 1792674866.576746
+    },
+    {
+      "scenario": "b",
+      "name": "attack_end",
+      "t": 1792674893.226299
+    },
+    {
+      "name": "end",
+      "t": 1792674938.2891357
+    }
+  ],
+  "scenarios": [
+    {
+      "attacker": "h2",
+      "victim": "h6",
+      "link": "s2-s6",
+      "id": "b",
+      "attack_start": 1792674866.5767436,
+      "attack_end": 1792674892.2207475,
+      "recover_end": 1792674938.2278836
+    }
+  ]
+}

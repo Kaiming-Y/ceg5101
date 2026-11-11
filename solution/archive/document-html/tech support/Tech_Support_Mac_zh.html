@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CA2 技术支持（Mac 版）：安装、复现与现场演示</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">body{font-family:"WenQuanYi Zen Hei","Noto Sans CJK SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;max-width:880px;margin:28px auto;padding:0 20px;line-height:1.65;font-size:15px;color:#111;background:#fff}
+h1{font-size:26px} h2{font-size:20px;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:4px}
+table{border-collapse:collapse;margin:10px 0;font-size:14px} th,td{border:1px solid #ccc;padding:5px 8px;vertical-align:top} th{background:#f3f3f1}
+code{background:#f3f3f1;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#f3f3f1;padding:10px;overflow-x:auto} pre code{padding:0}
+blockquote{color:#444;border-left:4px solid #2a78d6;margin-left:0;padding-left:12px}
+@media print{h2{break-after:avoid} table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CA2 技术支持（Mac 版）：安装、复现与现场演示</h1>
+</header>
+<blockquote>
+<p>给用 Mac 的同学。按顺序做：第 1 节确认你的 Mac 是哪种芯片，第 2
+节装好 VM 并登录，第 3 节装项目，第 4 节跑一遍完整实验，第 5–6
+节练现场演示和 MiniEdit。出错先查第 8 节。现场演示的讲解和分工见
+<code>docs/Live_Demo_Runbook_zh.pdf</code>。</p>
+<p>约定：<code>$</code> 开头的是在 VM
+的终端里输入；<code>mininet&gt;</code> 开头的是在 Mininet 的 CLI
+里输入；<code>mac$</code> 开头的是在 Mac 自己的“终端”里输入。</p>
+</blockquote>
+<h2 id="先看是哪种芯片">1. 先看是哪种芯片</h2>
+<p>左上角苹果菜单 → 关于本机：</p>
+<ul>
+<li>写着 <strong>芯片 Apple M1 / M2 / M3 / M4</strong> → <strong>Apple
+芯片</strong>，走第 2B 节（UTM + ARM 版 Ubuntu）。官方 Mininet VM 是 x86
+镜像，在 Apple 芯片上不能直接跑。</li>
+<li>写着 <strong>处理器 Intel</strong> → <strong>Intel
+Mac</strong>，走第 2A 节（VirtualBox + 官方 Mininet VM），和 Windows
+一样。</li>
+</ul>
+<p>两种都需要：</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>项目</th>
+<th>要求</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>内存</td>
+<td>Mac ≥ 8 GB，给 VM 4 GB</td>
+</tr>
+<tr class="even">
+<td>硬盘</td>
+<td>空闲 ≥ 15 GB</td>
+</tr>
+<tr class="odd">
+<td>网络</td>
+<td>安装那一步要能上网</td>
+</tr>
+<tr class="even">
+<td><strong>XQuartz</strong></td>
+<td>Mac 上的 X 窗口，MiniEdit 和总览图要用。<a href="https://www.xquartz.org" class="uri">https://www.xquartz.org</a>
+下载安装，<strong>装完注销再登录一次</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="a.-intel-macvirtualbox-官方-mininet-vm">2A. Intel
+Mac：VirtualBox + 官方 Mininet VM</h2>
+<ol type="1">
+<li>下载 VirtualBox 7（<a href="https://www.virtualbox.org/wiki/Downloads" class="uri">https://www.virtualbox.org/wiki/Downloads</a>，选 “macOS /
+Intel hosts”）和官方 Mininet VM（<a href="https://github.com/mininet/mininet/releases/tag/2.3.0" class="uri">https://github.com/mininet/mininet/releases/tag/2.3.0</a>，<code>mininet-2.3.0-210211-ubuntu-20.04.1-legacy-server-amd64-ovf.zip</code>，约
+1 GB）。第一次打开 VirtualBox 时，按提示到“系统设置 →
+隐私与安全性”里允许 Oracle 的扩展。</li>
+<li>VirtualBox → 文件 → 导入虚拟电脑 → 选解压出来的
+<code>.ovf</code>。</li>
+<li>设置：内存 <strong>4096 MB</strong>，处理器 <strong>2–4
+个</strong>；网络 → 网卡 1 <strong>NAT</strong> → 高级 → 端口转发 →
+加一条：TCP，主机端口 <strong>2222</strong>，子系统端口
+<strong>22</strong>。</li>
+<li>启动 VM，等出现登录提示。</li>
+<li>登录（先打开 XQuartz，再打开“终端”）：</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mac$</span> ssh <span class="at">-Y</span> <span class="at">-p</span> 2222 mininet@127.0.0.1      <span class="co"># 密码 mininet</span></span></code></pre></div>
+<ol start="6" type="1">
+<li>传文件（在压缩包所在的文件夹里）：</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mac$</span> scp <span class="at">-P</span> 2222 ceg5101-sdn-lab_part1_report_code_results.zip mininet@127.0.0.1:</span></code></pre></div>
+<p>拿回结果：<code>mac$ scp -P 2222 -r mininet@127.0.0.1:ceg5101-sdn-lab/results/&lt;目录名&gt; .</code></p>
+<h2 id="b.-apple-芯片utm-ubuntu-22.04-arm">2B. Apple 芯片：UTM + Ubuntu
+22.04 ARM</h2>
+<blockquote>
+<p><strong>这条路径我们实际验证过</strong>：在 Ubuntu 22.04.5 ARM64
+上，<code>apt install mininet</code> 装到 Mininet 2.3.0 和 OVS
+2.17，<code>setup_ubuntu.sh</code> 自动下载 Python 3.9 建好
+<code>~/ryu-venv</code>（ryu-manager 4.34），单元测试全过，netem
+链路时延可用（不用额外装内核模块），<code>pingall</code> 0% 丢包，case b
+完整跑通：4.3 秒检测到 h2、封锁、h1→h6
+改道再回来；<code>bash demo/live_demo.sh quick</code>
+的四格画面也正常。结果在 <code>results/vm-arm64-quick/</code>。</p>
+<p>两点和官方 VM 不同：用户名是你装系统时自己设的（不是
+<code>mininet</code>）；MiniEdit 在
+<code>/usr/lib/python3/dist-packages/mininet/examples/miniedit.py</code>，同样要做第
+6.1 节的修改。</p>
+</blockquote>
+<h3 id="b.1-装-utm-和-ubuntu">2B.1 装 UTM 和 Ubuntu</h3>
+<ol type="1">
+<li>下载 <strong>UTM</strong>（免费）：<a href="https://mac.getutm.app" class="uri">https://mac.getutm.app</a>。</li>
+<li>下载 <strong>Ubuntu Server 22.04 LTS ARM64</strong> 的 ISO：<a href="https://ubuntu.com/download/server/arm" class="uri">https://ubuntu.com/download/server/arm</a>（文件名类似
+<code>ubuntu-22.04.x-live-server-arm64.iso</code>）。</li>
+<li>UTM → 创建新虚拟机 → <strong>虚拟化（Virtualize）</strong> → Linux →
+选刚才的 ISO。内存 <strong>4096 MB</strong>，CPU <strong>4
+核</strong>，硬盘 <strong>20
+GB</strong>，其余默认（网络是“共享网络”）。</li>
+<li>启动，按提示安装 Ubuntu：语言
+English，其余基本一路默认；设置用户名和密码（例如
+<code>kaiming</code>）；<strong>勾选 Install OpenSSH
+server</strong>。装完提示重启时，先在 UTM 里把 CD/DVD 弹出（清除
+ISO），再重启。</li>
+<li>在 VM 窗口里登录，输入 <code>ip -br a</code>，记下
+<code>enp0s1</code> 后面的地址，例如 <code>192.168.64.5</code>。</li>
+</ol>
+<h3 id="b.2-装-mininet">2B.2 装 Mininet</h3>
+<p>在 Mac 的终端里登录（先打开 XQuartz）：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mac$</span> ssh <span class="at">-Y</span> kaiming@192.168.64.5</span></code></pre></div>
+<p>然后在 VM 里：</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo apt update</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo apt install <span class="at">-y</span> mininet openvswitch-switch unzip</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mn <span class="at">--version</span>            <span class="co"># 应输出 2.3.0</span></span></code></pre></div>
+<h3 id="b.3-传文件">2B.3 传文件</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mac$</span> scp ceg5101-sdn-lab_part1_report_code_results.zip kaiming@192.168.64.5:</span></code></pre></div>
+<p>之后的第 3 节起和 Intel 一样。区别只有两点： -
+<code>setup_ubuntu.sh</code> 发现系统 Python 是 3.10（太新，Ryu 4.34
+用不了），会自动下载一个 Python 3.9 来建
+<code>~/ryu-venv</code>，所以这一步必须联网，时间会长一点。 -
+登录命令换成 <code>ssh -Y 你的用户名@VM的IP</code>，后文里写
+<code>-p 2222 mininet@127.0.0.1</code> 的地方都照此替换。</p>
+<h2 id="c.-演示时的终端设置两种-mac-都一样">2C. 演示时的终端设置（两种
+Mac 都一样）</h2>
+<ul>
+<li>终端 → 设置 → 描述文件 → 文本 → 字体大小调到
+<strong>16</strong>；演示时按 Control-Command-F 全屏，保证至少 160
+列宽。</li>
+<li>总览图和 MiniEdit 的窗口由 XQuartz 显示，出现在 Mac 桌面上。</li>
+</ul>
+<h2 id="把项目装进-vm">3. 把项目装进 VM</h2>
+<h3 id="拷项目">3.1 拷项目</h3>
+<p>用第 2 节最后介绍的方法，把
+<code>ceg5101-sdn-lab_part1_report_code_results.zip</code> 拷进 VM
+的家目录（part1 就够跑实验；part2
+是演示材料，留在自己电脑上用浏览器打开）。然后在 <strong>VM</strong>
+里：</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo apt install <span class="at">-y</span> unzip        <span class="co"># 官方 VM 一般已有</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> unzip ceg5101-sdn-lab_part1_report_code_results.zip</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ceg5101-sdn-lab</span></code></pre></div>
+<h3 id="一键安装约-510-分钟需要联网">3.2 一键安装（约 5–10
+分钟，需要联网）</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash scripts/setup_ubuntu.sh</span></code></pre></div>
+<p>它会装 OVS、hping3、iperf、tcpdump、ethtool、python3-tk，并在
+<code>~/ryu-venv</code> 里装好 Ryu 4.34。最后打印两行
+<code>export</code>，照着设置（建议写进
+<code>~/.bashrc</code>，以后不用每次输入）：</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> echo <span class="st">&#39;export RYU_MANAGER=$HOME/ryu-venv/bin/ryu-manager PLOT_PYTHON=$HOME/ryu-venv/bin/python&#39;</span> <span class="op">&gt;&gt;</span> ~/.bashrc</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> source ~/.bashrc</span></code></pre></div>
+<h3 id="自测每一项都必须通过">3.3 自测（每一项都必须通过）</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="va">$RYU_MANAGER</span> <span class="at">--version</span>                          <span class="co"># 应输出 ryu-manager 4.34</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ~/ryu-venv/bin/python <span class="at">-m</span> unittest discover <span class="at">-s</span> tests   <span class="co"># 应显示 Ran 18 tests ... OK</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> python3 analysis/expected_paths.py              <span class="co"># h1-&gt;h6 应为 s1-s2-s6 (19)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mn <span class="at">--test</span> pingall                          <span class="co"># Mininet 自带测试，0% dropped</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mn <span class="at">-c</span>                                      <span class="co"># 清理</span></span></code></pre></div>
+<h2 id="完整复现实验约-5-分钟">4. 完整复现实验（约 5 分钟）</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/ceg5101-sdn-lab</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo <span class="at">-E</span> python3 experiments/run_experiment.py</span></code></pre></div>
+<ul>
+<li><code>-E</code> 不能少，它把 <code>RYU_MANAGER</code> 等环境变量带进
+sudo。</li>
+<li>脚本会自己启动控制器和 Mininet，依次跑 case
+a、b、c，最后画图。屏幕上会打印 <code>attack_start</code> /
+<code>attack_end</code> 等时间点。</li>
+<li>有链路时延时，脚本会自动用
+<code>CEG_WARMUP=12</code>（屏幕上会打印一行
+<code>using CEG_WARMUP=12</code>）。这一步很重要，否则 h1
+会被误封，原因见第 8 节。</li>
+<li>结果在 <code>results/&lt;日期时间&gt;/</code>。最重要的是
+<code>summary.md</code> 和 <code>figures/fig1–fig5</code>。</li>
+</ul>
+<h3 id="怎么判断结果对不对">4.1 怎么判断结果对不对</h3>
+<p>打开
+<code>results/&lt;日期时间&gt;/summary.md</code>，和我们的结果比（<code>results/vm-delay-abc/summary.md</code>）：</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>检查项</th>
+<th>应该看到</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>blocked</td>
+<td>三个 case 都是 yes（a、b 封 h2，c 封 h5）</td>
+</tr>
+<tr class="even">
+<td>anomalous links</td>
+<td>a：s2-s3；b：s2-s6；c：s3-s5, s3-s6</td>
+</tr>
+<tr class="odd">
+<td>h1→h6 path during</td>
+<td>只有 b 变成 s1-s2-s3-s6，a 和 c 保持 s1-s2-s6</td>
+</tr>
+<tr class="even">
+<td>detect delay</td>
+<td>大约 1.5–4 秒（每次会有差别，取决于洪泛落在采样周期的哪个位置）</td>
+</tr>
+<tr class="odd">
+<td>Events 表</td>
+<td>b 里有两次 h1→h6 reroute：一次 anomaly（离开），一次
+cost_update（回来）</td>
+</tr>
+<tr class="even">
+<td>丢包</td>
+<td>只在检测前那几秒有丢包；在 VM
+上会比报告里的容器数字小，这是正常的</td>
+</tr>
+</tbody>
+</table>
+<h3 id="扩展实验可选每个约-2-分钟">4.2 扩展实验（可选，每个约 2
+分钟）</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo <span class="at">-E</span> env CEG_BETA=2 python3 experiments/run_experiment.py <span class="at">--scenarios</span> b <span class="at">--baseline</span> 30        <span class="co"># β 太小，不改路由</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo <span class="at">-E</span> env CEG_COST_OVERRIDE=5-6:8 python3 experiments/run_experiment.py <span class="at">--scenarios</span> c <span class="at">--baseline</span> 30   <span class="co"># 让 case c 真的走 s5-s6</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo <span class="at">-E</span> python3 experiments/run_experiment.py <span class="at">--scenarios</span> <span class="st">&quot;&quot;</span> <span class="at">--baseline</span> 30 <span class="at">--fail-link</span> s2-s6 <span class="at">--fail-for</span> 20 <span class="at">--recover</span> 30   <span class="co"># 断链</span></span></code></pre></div>
+<h3 id="只重新画图">4.3 只重新画图</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="va">$PLOT_PYTHON</span> analysis/plot_results.py results/<span class="op">&lt;</span>日期时间<span class="op">&gt;</span></span></code></pre></div>
+<h2 id="现场演示">5. 现场演示</h2>
+<h3 id="一条命令的完整演示主方案">5.1 一条命令的完整演示（主方案）</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/ceg5101-sdn-lab</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash demo/live_demo.sh          <span class="co"># case a、b、c，约 5–6 分钟</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash demo/live_demo.sh quick    <span class="co"># 只跑 case b，约 2.5 分钟</span></span></code></pre></div>
+<p>终端分成四格：左上实验进度、左下控制器事件（BLOCK / REROUTE /
+UNBLOCK）、右上状态板（当前路径、链路代价、各源速率）、右下 h6
+收到的每秒吞吐和丢包。跑完左上自动打印本次的结果表，再用它提示的
+<code>python3 demo/show_figure.py results/live-…</code>
+打开总览图。讲解台词、分工、时间安排都在
+<code>docs/Live_Demo_Runbook_zh.pdf</code>。</p>
+<ul>
+<li>终端要够大：全屏后至少 160 列、45 行（字号 16 左右）。</li>
+<li>退出 tmux 画面：按 Ctrl-b，再按 d。中途出错：<code>sudo mn -c</code>
+后重跑。</li>
+</ul>
+<h3 id="手动命令卡老师要求一步步敲命令时用">5.2
+手动命令卡（老师要求一步步敲命令时用）</h3>
+<p>开<strong>两个终端</strong>，都先
+<code>cd ~/ceg5101-sdn-lab</code>。演示前先 <code>sudo mn -c</code>
+清理一次。</p>
+<p><strong>终端 1：控制器</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> CEG_WARMUP=12 CEG_LOG_DIR=results/live/controller <span class="va">$RYU_MANAGER</span> <span class="at">--observe-links</span> controller/integrated_controller.py <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">--line-buffered</span> EVENT</span></code></pre></div>
+<p><strong>终端 2：Mininet</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mn <span class="at">--custom</span> topology/ceg_mesh_topo.py <span class="at">--topo</span> meshTopo <span class="at">--link</span> tc <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">--controller</span> remote,ip=127.0.0.1,port=6633 <span class="at">--switch</span> ovsk,protocols=OpenFlow13 <span class="at">--mac</span></span></code></pre></div>
+<p>等终端 1 出现 <code>topology_ready</code>（约 10–25 秒），然后在
+Mininet CLI 里<strong>按顺序</strong>输入（h1 的 iperf 要紧跟着
+pingall，中间不要停太久）：</p>
+<pre><code>mininet&gt; pingall
+mininet&gt; h6 iperf -s -u -i 1 &gt; /tmp/h6.txt &amp;
+mininet&gt; h1 iperf -u -c 10.0.0.6 -b 10M -t 300 &gt; /dev/null &amp;
+mininet&gt; h2 ping -i 1 10.0.0.4 &gt; /dev/null &amp;
+mininet&gt; sh sleep 30
+mininet&gt; h2 hping3 --icmp --flood -d 1000 10.0.0.6 &gt; /dev/null 2&gt;&amp;1 &amp;</code></pre>
+<p>几秒后终端 1 应出现 <code>[EVENT] block h2-&gt;h6</code> 和
+<code>[EVENT] reroute h1-&gt;h6 ... &#39;s1-s2-s3-s6&#39;</code>。接着展示：</p>
+<pre><code>mininet&gt; sh ovs-ofctl -O OpenFlow13 dump-flows s2 | grep 5000        # drop 规则，n_packets 在涨
+mininet&gt; h6 timeout 3 tcpdump -n -i h6-eth0 icmp and src host 10.0.0.2   # 0 packets captured
+mininet&gt; sh tail -5 /tmp/h6.txt                                       # h1-&gt;h6 每秒 0% 丢包
+mininet&gt; h2 pkill hping3                                              # 停止攻击，约 14 秒后出现 unblock 和回切
+mininet&gt; exit</code></pre>
+<p>结束后 <code>sudo mn -c</code>。</p>
+<p><strong>60 秒规则</strong>：洪泛开始后 60 秒内没看到
+block，就别在现场调试了，直接切回幻灯片第 8 页的录屏。</p>
+<h2 id="miniedittask-1">6. MiniEdit（Task 1）</h2>
+<h3 id="先修一个-mininet-2.3.0-自带的-bug只做一次">6.1 先修一个 Mininet
+2.3.0 自带的 bug（只做一次）</h3>
+<p>不修的话，File → Save 会存出 0 字节的空文件。下面两行对官方 VM 和 apt
+装的 Mininet 都适用：</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ME=<span class="va">$(</span><span class="ex">python3</span> <span class="at">-c</span> <span class="st">&quot;import mininet,os;print(os.path.dirname(mininet.__file__))&quot;</span><span class="va">)</span>/examples/miniedit.py<span class="kw">;</span> <span class="bu">echo</span> <span class="va">$ME</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo sed <span class="at">-i.orig</span> <span class="st">&quot;s/open(fileName, &#39;wb&#39;)/open(fileName, &#39;w&#39;)/&quot;</span> <span class="va">$ME</span></span></code></pre></div>
+<p>官方 VM 的家目录里还有一份
+<code>~/mininet/examples/miniedit.py</code>，如果你用那一份启动，也要同样改一次。</p>
+<h3 id="启动">6.2 启动</h3>
+<p>用第 2
+节的方式登录，<strong>必须带图形转发</strong>（<code>-Y</code>）。</p>
+<p>终端 1（控制器）：</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/ceg5101-sdn-lab</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> CEG_LOG_DIR=results/miniedit/controller <span class="va">$RYU_MANAGER</span> <span class="at">--observe-links</span> controller/integrated_controller.py</span></code></pre></div>
+<p>终端 2（MiniEdit）：</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ME=<span class="va">$(</span><span class="ex">python3</span> <span class="at">-c</span> <span class="st">&quot;import mininet,os;print(os.path.dirname(mininet.__file__))&quot;</span><span class="va">)</span>/examples/miniedit.py</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo <span class="at">-E</span> XAUTHORITY=<span class="va">$HOME</span>/.Xauthority python3 <span class="va">$ME</span></span></code></pre></div>
+<h3 id="搭拓扑约-20-分钟照着-presentationvideominiedit_build.mp4-的顺序">6.3
+搭拓扑（约 20 分钟，照着
+<code>presentation/video/miniedit_build.mp4</code> 的顺序）</h3>
+<ol type="1">
+<li>工具栏选 Switch，放 s1–s6（上排 s1 s2 s3，下排 s4 s5 s6）；选
+Host，放 h1–h6（h1–h3 在上，h4–h6 在下）。</li>
+<li>选 NetLink，从每台交换机拖到它的主机，再连 11 条交换机链路。</li>
+<li>选 Select，右键每条链路 → Properties：Bandwidth 填
+<code>40</code>，Delay 填带单位的值：
+<ul>
+<li>主机链路都是 <code>15ms</code></li>
+<li>s1-s2 <code>5ms</code>，s2-s3 <code>10ms</code>，s4-s5
+<code>15ms</code>，s5-s6 <code>20ms</code>，s1-s4
+<code>8ms</code>，s2-s5 <code>12ms</code>，s3-s6 <code>7ms</code>，s1-s5
+<code>18ms</code>，s2-s4 <code>6ms</code>，s2-s6
+<code>14ms</code>，s3-s5 <code>9ms</code></li>
+</ul></li>
+<li>右键每台主机 → Properties：IP Address 填
+<code>10.0.0.i/24</code>。</li>
+<li>选 Controller 放一个 c0，用 NetLink 从 c0 连到 6
+台交换机（红色虚线）。右键 c0 → Properties：Controller Type 改成
+<strong>Remote Controller</strong>（IP 127.0.0.1、端口 6633
+是默认值）。</li>
+<li>Edit → Preferences：去掉 OpenFlow 1.0，勾上 <strong>OpenFlow
+1.3</strong> 和 <strong>Start CLI</strong>。</li>
+<li>File → Save，存成
+<code>~/ceg5101-sdn-lab/miniedit/my_topology_manual.mn</code>。</li>
+<li>截图：完整画布。</li>
+<li>点左下角 Run，等终端 1 出现 <code>topology_ready</code>，在终端 2 的
+<code>mininet&gt;</code> 里输入 <code>pingall</code>（应为 0%
+dropped，30/30），再输入 <code>h1 ping -c 4 h6</code>（约 100
+ms）。截图。</li>
+<li>先在 CLI 里输入 <code>exit</code>，再点 Stop。</li>
+</ol>
+<h3 id="和我们的版本对照">6.4 和我们的版本对照</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mnkey<span class="er">(</span><span class="kw">)</span> <span class="kw">{</span> <span class="ex">python3</span> <span class="at">-c</span> <span class="st">&quot;import json,sys;d=json.load(open(sys.argv[1]));[print(*sorted([l[&#39;src&#39;],l[&#39;dest&#39;]]),l[&#39;opts&#39;].get(&#39;bw&#39;),l[&#39;opts&#39;].get(&#39;delay&#39;)) for l in d[&#39;links&#39;]];[print(h[&#39;opts&#39;][&#39;hostname&#39;],h[&#39;opts&#39;].get(&#39;ip&#39;)) for h in d[&#39;hosts&#39;]]&quot;</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">sort</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> diff <span class="op">&lt;(</span><span class="ex">mnkey</span> miniedit/my_topology.mn<span class="op">)</span> <span class="op">&lt;(</span><span class="ex">mnkey</span> miniedit/my_topology_manual.mn<span class="op">)</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> 一致</span></code></pre></div>
+<p>没有输出差异、最后打印“一致”，就说明链路参数和主机 IP 完全相同。</p>
+<h2 id="打开演示材料改报告">7. 打开演示材料、改报告</h2>
+<ul>
+<li>幻灯片：用 Chrome 或 Edge 打开
+<code>presentation/slides/CEG5101_CA2_Group5.html</code>（单文件，可以单独拷走）。按
+→ 或空格翻页，N 显示讲稿，P 打开演讲者视图，数字 + 回车跳页。</li>
+<li>讲稿：<code>presentation/script/speaker_script.pdf</code>。题库：<code>docs/QA_Bank.pdf</code>。速读：<code>docs/Project_Quick_Guide_zh.pdf</code>。</li>
+<li>改报告：编辑 <code>report/report.tex</code>，在装了 TeX 的电脑上执行
+<code>cd report &amp;&amp; latexmk -pdf report.tex</code>。不想装
+TeX，可以把 <code>report/</code> 文件夹上传到 Overleaf 编译。</li>
+<li>重新生成幻灯片用的图：<code>$PLOT_PYTHON presentation/scripts/plot_slides.py</code>。</li>
+</ul>
+<h2 id="常见问题">8. 常见问题</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>现象</th>
+<th>原因</th>
+<th>怎么办</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>setup_ubuntu.sh</code> 卡在 apt 或 pip</td>
+<td>VM 上不了网</td>
+<td>确认 VM 网卡是 NAT；在 VM 里 <code>ping 8.8.8.8</code>
+测试；学校网络可能要换手机热点</td>
+</tr>
+<tr class="even">
+<td><code>ryu-manager</code> 报 eventlet 或 <code>ALREADY_HANDLED</code>
+错误</td>
+<td>Python 版本太新，或 eventlet 版本不对</td>
+<td>只用脚本装的
+<code>~/ryu-venv/bin/ryu-manager</code>，不要用系统自带的</td>
+</tr>
+<tr class="odd">
+<td><code>run_experiment.py</code> 说找不到 ryu-manager</td>
+<td>sudo 丢了环境变量</td>
+<td>用 <code>sudo -E</code>，并确认 <code>echo $RYU_MANAGER</code>
+有输出</td>
+</tr>
+<tr class="even">
+<td><code>Address already in use</code> / 端口 6633 被占用</td>
+<td>上一次的控制器还在</td>
+<td><code>sudo pkill -f ryu-manager</code>，再
+<code>sudo mn -c</code></td>
+</tr>
+<tr class="odd">
+<td><code>pingall</code> 不通</td>
+<td>控制器还没发现全部 11 条链路，或没开 OpenFlow 1.3</td>
+<td>等终端出现 <code>topology_ready</code> 再 ping；确认控制器带了
+<code>--observe-links</code>，交换机是
+<code>protocols=OpenFlow13</code></td>
+</tr>
+<tr class="even">
+<td>h1 一开始就被封，h1→h6 吞吐一直为 0（events.csv 里有
+<code>block,h1</code>）</td>
+<td>warm-up 太短：带时延时 pingall 变慢，h1 的 iperf 在 warm-up
+结束后才开始</td>
+<td>用 <code>run_experiment.py</code>（会自动设
+12）；手动演示时控制器前面加 <code>CEG_WARMUP=12</code>，并且 iperf 紧跟
+pingall 启动</td>
+</tr>
+<tr class="odd">
+<td>某个 case 没被检测到</td>
+<td>攻击源没有基线，或者还在 warm-up</td>
+<td>确认有背景 ping，基线阶段至少 30 秒；查
+<code>controller/sources.csv</code></td>
+</tr>
+<tr class="even">
+<td><code>Specified qdisc kind is unknown</code></td>
+<td>系统没有 netem（容器里常见）</td>
+<td>官方 VM 不会出现；容器里脚本会自动去掉时延</td>
+</tr>
+<tr class="odd">
+<td>MiniEdit 或总览图报 <code>cannot connect to X server</code> /
+<code>couldn&#39;t connect to display</code></td>
+<td>没有 X 转发</td>
+<td>按第 2 节用带 <code>-Y</code> 的方式登录；sudo 时带上
+<code>XAUTHORITY=$HOME/.Xauthority</code></td>
+</tr>
+<tr class="even">
+<td>MiniEdit 保存后文件是 0 字节，终端显示
+<code>a bytes-like object is required</code></td>
+<td>Mininet 2.3.0 的 bug</td>
+<td>做第 6.1 节的修改，重启 MiniEdit 再保存</td>
+</tr>
+<tr class="odd">
+<td>MiniEdit 打开 <code>.mn</code> 时报
+<code>dict_items + dict_items</code></td>
+<td>这个版本读 preferences 的 bug</td>
+<td>用 <code>miniedit/ceg_mesh_topo.mn</code>；自己存的文件删掉
+<code>&quot;application&quot;</code> 那一段</td>
+</tr>
+<tr class="even">
+<td>实验中途出错，之后什么都不通</td>
+<td>残留的 Mininet 进程和网卡</td>
+<td><code>sudo mn -c</code>，<code>sudo pkill -f ryu-manager</code>，再重跑</td>
+</tr>
+<tr class="odd">
+<td>幻灯片里视频不播放</td>
+<td>浏览器不支持 H.264，或在 App 内预览</td>
+<td>用 Chrome / Edge 直接打开 HTML 文件</td>
+</tr>
+<tr class="even">
+<td>压缩包打不开</td>
+<td>文件太大或下载不完整</td>
+<td>用电脑下载后再解压；也可以分别下载 part1 和 part2</td>
+</tr>
+<tr class="odd">
+<td><code>tmux: command not found</code></td>
+<td>旧版安装脚本没装 tmux</td>
+<td><code>sudo apt install -y tmux</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="实在不行时">9. 实在不行时</h2>
+<ul>
+<li>实验数据我们已经有完整的一套：报告和幻灯片的所有数字都来自
+<code>results/</code> 里的文件，不需要你们重跑。</li>
+<li>自己跑一遍的意义是熟悉过程，被问到时能讲清楚、能现场演示。最低要求：第
+3.3 节的自测全部通过，第 5 节的演示命令能走一遍。</li>
+</ul>
+</body>
+</html>

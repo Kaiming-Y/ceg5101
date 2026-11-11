@@ -1,0 +1,57 @@
+*** Creating network
+*** Adding controller
+*** Adding hosts:
+h1 h2 h3 h4 h5 h6 
+*** Adding switches:
+s1 s2 s3 s4 s5 s6 
+*** Adding links:
+(s6, h6) 
+*** Configuring hosts
+h1 h2 h3 h4 h5 h6 
+*** Starting controller
+c0 
+*** Starting 6 switches
+
+*** Starting CLI:
+
+===== 1) connectivity check (pingall)
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4 h5 h6 
+h2 -> h1 h3 h4 h5 h6 
+h3 -> h1 h2 h4 h5 h6 
+h4 -> h1 h2 h3 h5 h6 
+h5 -> h1 h2 h3 h4 h6 
+h6 -> h1 h2 h3 h4 h5 
+*** Results: 0% dropped (30/30 received)
+
+===== 2) normal traffic: h2 ping h3, 1 pps for 15 s (EMA baseline)
+PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+
+--- 10.0.0.3 ping statistics ---
+15 packets transmitted, 15 received, 0% packet loss, time 14320ms
+rtt min/avg/max/mdev = 0.379/0.541/0.755/0.102 ms
+
+===== 3) attack: h2 hping3 --icmp --flood -d 1000 h3
+[1] 10780
+
+===== 4) drop rule installed on s2 (priority 5000) - n_packets keeps growing
+cookie=0xd0, duration=3.864s, table=0, n_packets=18951, n_bytes=19746942, priority=5000,ip,nw_src=10.0.0.2 actions=drop
+cookie=0xd0, duration=5.872s, table=0, n_packets=28521, n_bytes=29718882, priority=5000,ip,nw_src=10.0.0.2 actions=drop
+
+===== 5) attacker packets reaching h3 during 3 s (tcpdump on h3-eth0)
+0 packets received by filter
+0 packets dropped by kernel
+
+===== 6) flood finished; hping3 summary
+66964 packets transmitted, 0 packets received, 100% packet loss
+round-trip min/avg/max = 0.0/0.0/0.0 ms
+HPING 10.0.0.3 (h2-eth0 10.0.0.3): icmp mode set, 28 headers + 1000 data bytes
+*** Stopping 1 controllers
+c0 
+*** Stopping 17 links
+.................
+*** Stopping 6 switches
+s1 s2 s3 s4 s5 s6 
+*** Stopping 6 hosts
+h1 h2 h3 h4 h5 h6 
+*** Done

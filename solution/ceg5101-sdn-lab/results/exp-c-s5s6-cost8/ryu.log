@@ -1,0 +1,104 @@
+loading app /home/user/ceg5101-sdn-lab/controller/integrated_controller.py
+loading app ryu.controller.ofp_handler
+loading app ryu.topology.switches
+loading app ryu.controller.ofp_handler
+instantiating app /home/user/ceg5101-sdn-lab/controller/integrated_controller.py of AnomalyAwareController
+Config: {"poll_interval": 2.0, "link_capacity_bps": 40000000.0, "load_smoothing": 0.6, "alpha": 10.0, "beta": 30.0, "reroute_margin": 2.0, "ema_alpha": 0.3, "k_mult": 3.0, "k_sigma": 4.0, "min_attack_pps": 500.0, "warmup_samples": 5, "consecutive": 1, "anomaly_hold": 10.0, "auto_unblock": true, "unblock_quiet": 10.0, "expected_links": 11, "cost_override": "5-6:8", "log_dir": "/home/user/ceg5101-sdn-lab/results/exp-c-s5s6-cost8/controller"}
+instantiating app ryu.controller.ofp_handler of OFPHandler
+instantiating app ryu.topology.switches of Switches
+Switch connected: s1
+Switch connected: s2
+Switch connected: s3
+Switch connected: s4
+Switch connected: s5
+Switch connected: s6
+[EVENT] topology_ready -> {'detail_links': 11}
+Host learned: 10.0.0.1 (00:00:00:00:00:01) at s1 port 1
+Host learned: 10.0.0.2 (00:00:00:00:00:02) at s2 port 1
+[EVENT] path_set h1->h2 {'path': 's1-s2', 'cost': 5.0}
+[EVENT] path_set h2->h1 {'path': 's2-s1', 'cost': 5.0}
+Host learned: 10.0.0.3 (00:00:00:00:00:03) at s3 port 1
+[EVENT] path_set h1->h3 {'path': 's1-s2-s3', 'cost': 15.0}
+[EVENT] path_set h3->h1 {'path': 's3-s2-s1', 'cost': 15.0}
+Host learned: 10.0.0.4 (00:00:00:00:00:04) at s4 port 1
+[EVENT] path_set h1->h4 {'path': 's1-s4', 'cost': 8.0}
+[EVENT] path_set h4->h1 {'path': 's4-s1', 'cost': 8.0}
+Host learned: 10.0.0.5 (00:00:00:00:00:05) at s5 port 1
+[EVENT] path_set h1->h5 {'path': 's1-s2-s5', 'cost': 17.0}
+[EVENT] path_set h5->h1 {'path': 's5-s2-s1', 'cost': 17.0}
+Host learned: 10.0.0.6 (00:00:00:00:00:06) at s6 port 1
+[EVENT] path_set h1->h6 {'path': 's1-s2-s6', 'cost': 19.0}
+[EVENT] path_set h6->h1 {'path': 's6-s2-s1', 'cost': 19.0}
+[EVENT] path_set h2->h3 {'path': 's2-s3', 'cost': 10.0}
+[EVENT] path_set h3->h2 {'path': 's3-s2', 'cost': 10.0}
+[EVENT] path_set h2->h4 {'path': 's2-s4', 'cost': 6.0}
+[EVENT] path_set h4->h2 {'path': 's4-s2', 'cost': 6.0}
+[EVENT] path_set h2->h5 {'path': 's2-s5', 'cost': 12.0}
+[EVENT] path_set h5->h2 {'path': 's5-s2', 'cost': 12.0}
+[EVENT] path_set h2->h6 {'path': 's2-s6', 'cost': 14.0}
+[EVENT] path_set h6->h2 {'path': 's6-s2', 'cost': 14.0}
+[EVENT] path_set h3->h4 {'path': 's3-s2-s4', 'cost': 16.0}
+[EVENT] path_set h4->h3 {'path': 's4-s2-s3', 'cost': 16.0}
+[EVENT] path_set h3->h5 {'path': 's3-s5', 'cost': 9.0}
+[EVENT] path_set h5->h3 {'path': 's5-s3', 'cost': 9.0}
+[EVENT] path_set h3->h6 {'path': 's3-s6', 'cost': 7.0}
+[EVENT] path_set h6->h3 {'path': 's6-s3', 'cost': 7.0}
+[EVENT] path_set h4->h5 {'path': 's4-s5', 'cost': 15.0}
+[EVENT] path_set h5->h4 {'path': 's5-s4', 'cost': 15.0}
+[EVENT] path_set h4->h6 {'path': 's4-s2-s6', 'cost': 20.0}
+[EVENT] path_set h6->h4 {'path': 's6-s2-s4', 'cost': 20.0}
+[EVENT] path_set h5->h6 {'path': 's5-s6', 'cost': 8.0}
+[EVENT] path_set h6->h5 {'path': 's6-s5', 'cost': 8.0}
+[EVENT] block h5->h6 {'ip': '10.0.0.5', 'pps': 879.8, 'baseline': 0.96, 'threshold': 500.0, 'links': ['s5-s6']}
+[EVENT] reroute h6->h5 {'reason': 'anomaly', 'old': 's6-s5', 'new': 's6-s3-s5', 'old_cost': 39.32, 'new_cost': 17.92}
+[EVENT] unblock h5-> {'ip': '10.0.0.5', 'quiet_s': 12.0}
+[EVENT] reroute h6->h5 {'reason': 'cost_update', 'old': 's6-s3-s5', 'new': 's6-s5', 'old_cost': 16.0, 'new_cost': 8.0}
+[EVENT] link_down -> {'detail_links': ['s1-s2']}
+[EVENT] reroute h1->h2 {'reason': 'link_down', 'old': 's1-s2', 'new': 's1-s4-s2', 'old_cost': 'inf', 'new_cost': 14.0}
+[EVENT] reroute h2->h1 {'reason': 'link_down', 'old': 's2-s1', 'new': 's2-s4-s1', 'old_cost': 'inf', 'new_cost': 14.0}
+[EVENT] reroute h1->h3 {'reason': 'link_down', 'old': 's1-s2-s3', 'new': 's1-s4-s2-s3', 'old_cost': 'inf', 'new_cost': 24.0}
+[EVENT] reroute h3->h1 {'reason': 'link_down', 'old': 's3-s2-s1', 'new': 's3-s2-s4-s1', 'old_cost': 'inf', 'new_cost': 24.0}
+[EVENT] reroute h1->h5 {'reason': 'link_down', 'old': 's1-s2-s5', 'new': 's1-s5', 'old_cost': 'inf', 'new_cost': 18.0}
+[EVENT] reroute h5->h1 {'reason': 'link_down', 'old': 's5-s2-s1', 'new': 's5-s1', 'old_cost': 'inf', 'new_cost': 18.0}
+[EVENT] reroute h1->h6 {'reason': 'link_down', 'old': 's1-s2-s6', 'new': 's1-s5-s6', 'old_cost': 'inf', 'new_cost': 29.87}
+[EVENT] reroute h6->h1 {'reason': 'link_down', 'old': 's6-s2-s1', 'new': 's6-s5-s1', 'old_cost': 'inf', 'new_cost': 26.0}
+[EVENT] link_down -> {'detail_links': ['s1-s4']}
+[EVENT] reroute h1->h2 {'reason': 'link_down', 'old': 's1-s4-s2', 'new': 's1-s5-s2', 'old_cost': 'inf', 'new_cost': 30.0}
+[EVENT] reroute h2->h1 {'reason': 'link_down', 'old': 's2-s4-s1', 'new': 's2-s5-s1', 'old_cost': 'inf', 'new_cost': 30.0}
+[EVENT] reroute h1->h3 {'reason': 'link_down', 'old': 's1-s4-s2-s3', 'new': 's1-s5-s3', 'old_cost': 'inf', 'new_cost': 27.0}
+[EVENT] reroute h3->h1 {'reason': 'link_down', 'old': 's3-s2-s4-s1', 'new': 's3-s5-s1', 'old_cost': 'inf', 'new_cost': 27.0}
+[EVENT] reroute h1->h4 {'reason': 'link_down', 'old': 's1-s4', 'new': 's1-s5-s4', 'old_cost': 'inf', 'new_cost': 33.0}
+[EVENT] reroute h4->h1 {'reason': 'link_down', 'old': 's4-s1', 'new': 's4-s5-s1', 'old_cost': 'inf', 'new_cost': 33.0}
+[EVENT] link_down -> {'detail_links': ['s1-s5']}
+[EVENT] link_down -> {'detail_links': ['s2-s3']}
+[EVENT] reroute h2->h3 {'reason': 'link_down', 'old': 's2-s3', 'new': 's2-s5-s3', 'old_cost': 'inf', 'new_cost': 21.0}
+[EVENT] reroute h3->h2 {'reason': 'link_down', 'old': 's3-s2', 'new': 's3-s5-s2', 'old_cost': 'inf', 'new_cost': 21.0}
+[EVENT] reroute h3->h4 {'reason': 'link_down', 'old': 's3-s2-s4', 'new': 's3-s5-s4', 'old_cost': 'inf', 'new_cost': 24.0}
+[EVENT] reroute h4->h3 {'reason': 'link_down', 'old': 's4-s2-s3', 'new': 's4-s5-s3', 'old_cost': 'inf', 'new_cost': 24.0}
+[EVENT] link_down -> {'detail_links': ['s2-s4']}
+[EVENT] reroute h2->h4 {'reason': 'link_down', 'old': 's2-s4', 'new': 's2-s5-s4', 'old_cost': 'inf', 'new_cost': 27.0}
+[EVENT] reroute h4->h2 {'reason': 'link_down', 'old': 's4-s2', 'new': 's4-s5-s2', 'old_cost': 'inf', 'new_cost': 27.0}
+[EVENT] reroute h4->h6 {'reason': 'link_down', 'old': 's4-s2-s6', 'new': 's4-s5-s6', 'old_cost': 'inf', 'new_cost': 23.0}
+[EVENT] reroute h6->h4 {'reason': 'link_down', 'old': 's6-s2-s4', 'new': 's6-s5-s4', 'old_cost': 'inf', 'new_cost': 23.0}
+[EVENT] link_down -> {'detail_links': ['s2-s5']}
+[EVENT] reroute h2->h3 {'reason': 'link_down', 'old': 's2-s5-s3', 'new': 's2-s6-s3', 'old_cost': 'inf', 'new_cost': 22.71}
+[EVENT] reroute h3->h2 {'reason': 'link_down', 'old': 's3-s5-s2', 'new': 's3-s6-s2', 'old_cost': 'inf', 'new_cost': 22.71}
+[EVENT] reroute h2->h4 {'reason': 'link_down', 'old': 's2-s5-s4', 'new': 's2-s6-s5-s4', 'old_cost': 'inf', 'new_cost': 38.71}
+[EVENT] reroute h4->h2 {'reason': 'link_down', 'old': 's4-s5-s2', 'new': 's4-s5-s6-s2', 'old_cost': 'inf', 'new_cost': 38.71}
+[EVENT] reroute h2->h5 {'reason': 'link_down', 'old': 's2-s5', 'new': 's2-s6-s5', 'old_cost': 'inf', 'new_cost': 23.71}
+[EVENT] reroute h5->h2 {'reason': 'link_down', 'old': 's5-s2', 'new': 's5-s6-s2', 'old_cost': 'inf', 'new_cost': 23.71}
+[EVENT] link_down -> {'detail_links': ['s2-s6']}
+[EVENT] link_down -> {'detail_links': ['s3-s5']}
+[EVENT] reroute h3->h4 {'reason': 'link_down', 'old': 's3-s5-s4', 'new': 's3-s6-s5-s4', 'old_cost': 'inf', 'new_cost': 30.0}
+[EVENT] reroute h4->h3 {'reason': 'link_down', 'old': 's4-s5-s3', 'new': 's4-s5-s6-s3', 'old_cost': 'inf', 'new_cost': 30.0}
+[EVENT] reroute h3->h5 {'reason': 'link_down', 'old': 's3-s5', 'new': 's3-s6-s5', 'old_cost': 'inf', 'new_cost': 15.0}
+[EVENT] reroute h5->h3 {'reason': 'link_down', 'old': 's5-s3', 'new': 's5-s6-s3', 'old_cost': 'inf', 'new_cost': 15.0}
+[EVENT] link_down -> {'detail_links': ['s3-s6']}
+[EVENT] link_down -> {'detail_links': ['s4-s5']}
+[EVENT] link_down -> {'detail_links': ['s5-s6']}
+Switch disconnected: s6
+Switch disconnected: s4
+Switch disconnected: s1
+Switch disconnected: s3
+Switch disconnected: s5
+Switch disconnected: s2

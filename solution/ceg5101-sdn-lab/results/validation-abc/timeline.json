@@ -1,0 +1,79 @@
+{
+  "marks": [
+    {
+      "name": "topology_ready",
+      "t": 1792669978.789469
+    },
+    {
+      "name": "iperf_start",
+      "t": 1792669980.0245314
+    },
+    {
+      "name": "baseline_start",
+      "t": 1792669980.0319915
+    },
+    {
+      "scenario": "a",
+      "name": "attack_start",
+      "t": 1792670020.100649
+    },
+    {
+      "scenario": "a",
+      "name": "attack_end",
+      "t": 1792670046.7586737
+    },
+    {
+      "scenario": "b",
+      "name": "attack_start",
+      "t": 1792670091.8317246
+    },
+    {
+      "scenario": "b",
+      "name": "attack_end",
+      "t": 1792670118.496954
+    },
+    {
+      "scenario": "c",
+      "name": "attack_start",
+      "t": 1792670163.5579455
+    },
+    {
+      "scenario": "c",
+      "name": "attack_end",
+      "t": 1792670190.2130287
+    },
+    {
+      "name": "end",
+      "t": 1792670235.2751262
+    }
+  ],
+  "scenarios": [
+    {
+      "attacker": "h2",
+      "victim": "h3",
+      "link": "s2-s3",
+      "id": "a",
+      "attack_start": 1792670020.1006467,
+      "attack_end": 1792670045.7525985,
+      "recover_end": 1792670091.76143
+    },
+    {
+      "attacker": "h2",
+      "victim": "h6",
+      "link": "s2-s6",
+      "id": "b",
+      "attack_start": 1792670091.831723,
+      "attack_end": 1792670117.4911046,
+      "recover_end": 1792670163.4980273
+    },
+    {
+      "attacker": "h5",
+      "victim": "h6",
+      "link": "s5-s6",
+      "id": "c",
+      "attack_start": 1792670163.557944,
+      "attack_end": 1792670189.2074287,
+      "recover_end": 1792670235.2151709
+    }
+  ]
+}

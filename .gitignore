@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+/problem/pre-ref/
+/solution/archive/ceg5101-sdn-lab.zip
+/solution/ceg5101-sdn-lab/presentation/CEG5101_CA2_Group5.html
+/solution/ceg5101-sdn-lab/results/miniedit-vm/miniedit_session_raw.mp4

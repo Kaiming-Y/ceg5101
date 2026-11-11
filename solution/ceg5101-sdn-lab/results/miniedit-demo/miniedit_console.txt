@@ -1,0 +1,102 @@
+Getting Hosts and Switches.
+Getting controller selection:remote 
+Getting Links.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+*** Configuring hosts
+h1 h2 h3 h4 h5 h6 
+**** Starting 1 controllers
+c0 
+**** Starting 6 switches
+s1 (40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+s2 (40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+s3 (40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+s4 (40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+s5 (40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+s6 (40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+(40.00Mbit) *** Error: Warning: sch_htb: quantum of class 50001 is big. Consider r2q change.
+
+No NetFlow targets specified.
+No sFlow targets specified.
+
+##### MiniEdit network running: 6 switches, 6 hosts
+
+##### pingall from the MiniEdit network
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4 h5 h6 
+h2 -> h1 h3 h4 h5 h6 
+h3 -> h1 h2 h4 h5 h6 
+h4 -> h1 h2 h3 h5 h6 
+h5 -> h1 h2 h3 h4 h6 
+h6 -> h1 h2 h3 h4 h5 
+*** Results: 0% dropped (30/30 received)
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4 h5 h6 
+h2 -> h1 h3 h4 h5 h6 
+h3 -> h1 h2 h4 h5 h6 
+h4 -> h1 h2 h3 h5 h6 
+h5 -> h1 h2 h3 h4 h6 
+h6 -> h1 h2 h3 h4 h5 
+*** Results: 0% dropped (30/30 received)
+*** Stopping 1 controllers
+c0 
+*** Stopping 17 links
+.................
+*** Stopping 6 switches
+s1 s2 s3 s4 s5 s6 
+*** Stopping 6 hosts
+h1 h2 h3 h4 h5 h6 
+*** Done

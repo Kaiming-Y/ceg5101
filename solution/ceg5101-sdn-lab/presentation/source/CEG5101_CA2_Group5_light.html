@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From 48% Loss to Zero</title>
+<meta name="description" content="CEG5101 CA2, Group 5: an anomaly-aware routing and blocking controller (slides with speaker notes).">
+<style id="deck-css">
+:root{
+  --bg:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --ink3:#77766f; --grid:#e1e0d9; --band:#efeee9;
+  --main:#2a78d6; --detour:#eb6834; --attack:#d62728; --grey:#898781; --hl:#f5c400; --sw:#232a36;
+  --card:#ffffff; --line:#dddcd5; --around:#e6e5e0;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--around);color:var(--ink);font-family:var(--font);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{overflow:hidden}
+#viewport{position:fixed;left:0;top:0;right:0;bottom:0;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:var(--bg);
+  box-shadow:0 2px 24px rgba(0,0,0,.12);overflow:hidden}
+.slide{position:absolute;left:0;top:0;width:1920px;height:1080px;display:none;padding:54px 88px 0;overflow:hidden;
+  background:var(--bg)}
+.slide.active{display:block}
+.slide h2{font-size:40px;line-height:1.15;margin:0 0 26px;font-weight:750;letter-spacing:-.01em;max-width:1600px}
+.slide .notes{display:none}
+.foot{position:absolute;left:88px;right:88px;bottom:26px;height:36px;display:flex;align-items:center;
+  justify-content:space-between;font-size:20px;color:var(--ink3)}
+.foot .num{font-weight:700;color:var(--ink2);min-width:120px}
+.foot .num small{font-weight:400;color:var(--ink3)}
+.foot .mid{flex:1;text-align:center}
+.foot .tag{border:1.5px solid var(--line);border-radius:18px;padding:3px 14px;color:var(--ink2);background:#fff;
+  font-weight:600;white-space:nowrap}
+.kind-backup .foot .tag,.kind-hidden .foot .tag{border-style:dashed}
+.step{opacity:0;transition:opacity .35s ease}
+.step.on{opacity:1}
+.body{font-size:28px;line-height:1.38}
+.muted{color:var(--ink2)}
+.small{font-size:24px}
+.red{color:var(--attack)} .blue{color:var(--main)} .orange{color:var(--detour)}
+.row{display:flex;gap:48px}
+.col{display:flex;flex-direction:column}
+.fig{margin:0;display:flex;align-items:center;justify-content:center}
+.fig img{max-width:100%;max-height:100%;display:block}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:26px 30px}
+.chip{display:inline-block;border-radius:14px;padding:2px 12px;font-size:22px;font-weight:700}
+.chip.red{background:#fdeaea;color:var(--attack);border:1.5px solid #f2b8b8}
+.chip.blue{background:#e7f0fb;color:var(--main);border:1.5px solid #b9d3f2}
+.chip.grey{background:#f0efea;color:var(--ink2);border:1.5px solid var(--line)}
+.chip.yellow{background:#fff7d1;color:var(--ink);border:1.5px solid var(--hl)}
+table.t{border-collapse:collapse;font-size:26px;line-height:1.3}
+table.t th{font-size:22px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);text-align:left;
+  padding:10px 18px;border-bottom:2px solid var(--ink)}
+table.t td{padding:16px 18px;border-bottom:1.5px solid var(--line);vertical-align:top}
+table.t td.d{color:var(--ink3);font-size:22px;white-space:nowrap}
+table.t.tight td{padding:8px 18px}
+table.t.num td{text-align:center} table.t.num th{text-align:center}
+table.t.nw td{white-space:nowrap;padding-left:13px;padding-right:13px} table.t.nw th{padding-left:13px;padding-right:13px} table.t.nw td.wrap{white-space:normal}
+.mono{font-family:var(--mono)}
+.navbtn{position:absolute;font:600 22px var(--font);color:var(--main);background:#fff;border:1.5px solid #b9d3f2;
+  border-radius:20px;padding:6px 18px;cursor:pointer;z-index:5}
+.navbtn:hover{background:#e7f0fb}
+/* video */
+.vid{position:relative;background:#111;border-radius:14px;overflow:hidden;line-height:0}
+.vid video{width:100%;height:100%;display:block;object-fit:contain;background:#111}
+.vid .print-poster{display:none;width:100%;height:100%;object-fit:contain}
+.vid .playhint{position:absolute;left:50%;top:50%;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;
+  background:rgba(11,11,11,.55);pointer-events:none;transition:opacity .25s}
+.vid .playhint:after{content:"";position:absolute;left:52px;top:36px;border-left:44px solid #fff;
+  border-top:30px solid transparent;border-bottom:30px solid transparent}
+.vid.playing .playhint{opacity:0}
+.vid.loop .playhint{display:none}
+/* slide 1 */
+.s1 .left{position:absolute;left:96px;top:120px;width:960px}
+.s1 .eyebrow{font-size:26px;font-weight:700;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+.s1 h1{font-size:96px;line-height:1.02;margin:18px 0 18px;letter-spacing:-.025em;font-weight:800}
+.s1 .subtitle{font-size:34px;line-height:1.3;color:var(--ink2);margin:0 0 44px;max-width:900px}
+.s1 .big{display:flex;align-items:baseline;gap:28px;font-weight:800;font-size:132px;line-height:1}
+.s1 .big .arr{font-size:80px;color:var(--ink3);font-weight:400}
+.s1 .cap{font-size:24px;color:var(--ink2);margin:12px 0 0}
+.s1 .team{position:absolute;left:96px;bottom:120px;font-size:28px;line-height:1.45}
+.s1 .team b{font-size:30px}
+.s1 .right{position:absolute;right:88px;top:150px;width:760px;height:640px}
+/* topology */
+svg text{font-family:var(--font)}
+.topo{width:100%;height:100%}
+.legend{display:flex;gap:34px;font-size:24px;color:var(--ink2);align-items:center;flex-wrap:wrap}
+.legend .sw{display:inline-block;width:46px;height:0;border-top:8px solid var(--main);vertical-align:middle;margin-right:10px}
+.legend .sw.o{border-top:6px dashed var(--detour)}
+.legend .sw.r{border-top:5px solid var(--attack)}
+/* highlight boxes on figures */
+.hlbox{position:absolute;border:4px solid var(--hl);border-radius:10px;box-shadow:0 0 0 4px rgba(245,196,0,.18)}
+.hllab{position:absolute;background:#fff7d1;border:2px solid var(--hl);border-radius:10px;padding:6px 14px;
+  font-size:24px;font-weight:650;white-space:nowrap;line-height:1.25}
+.hllab b{display:inline-block;width:32px;height:32px;line-height:32px;border-radius:50%;background:var(--ink);color:#fff;
+  text-align:center;font-size:20px;margin-right:8px}
+/* toolbar overlays (not part of the slide) */
+.ui{position:fixed;z-index:50;font-family:var(--font)}
+#timer{top:14px;right:16px;background:rgba(11,11,11,.78);color:#fff;font:700 26px var(--mono);padding:6px 14px;border-radius:10px;display:none}
+#timer.show{display:block}
+#jump{top:14px;left:16px;background:rgba(11,11,11,.78);color:#fff;font:700 26px var(--mono);padding:6px 14px;border-radius:10px;display:none}
+#jump.show{display:block}
+#toast{left:50%;bottom:26px;transform:translateX(-50%);background:rgba(11,11,11,.85);color:#fff;font-size:20px;
+  padding:10px 18px;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+#black{left:0;top:0;right:0;bottom:0;background:#000;display:none;z-index:60}
+#black.show{display:block}
+#notes-panel{left:0;right:0;bottom:0;height:36vh;background:#fff;border-top:2px solid var(--line);display:none;
+  overflow:auto;padding:16px 28px 24px;font-size:19px;line-height:1.5;color:var(--ink)}
+body.notes-open #notes-panel{display:block}
+#help{left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:2px solid var(--line);border-radius:16px;
+  padding:24px 32px;font-size:19px;line-height:1.6;display:none;box-shadow:0 10px 40px rgba(0,0,0,.2);max-width:760px}
+#help.show{display:block}
+#help kbd,.nk{font:600 16px var(--mono);border:1.5px solid var(--line);border-radius:6px;padding:1px 7px;background:#f6f6f3}
+.nhead{font-weight:700;color:var(--ink2);font-size:16px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.who{display:inline-block;font-weight:800;color:#fff;background:var(--ink);border-radius:6px;padding:0 8px;margin-right:6px}
+.who.b{background:var(--main)}
+.cue{color:var(--detour);font-weight:700}
+.tc{color:var(--main);font-weight:700}
+.nnote{color:var(--ink2);font-size:.92em;border-left:3px solid var(--line);padding-left:10px;margin-top:8px}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{height:auto;overflow:visible;background:#fcfcfb}
+  #viewport{position:static;overflow:visible}
+  #stage{position:static;transform:none !important;width:1920px;height:auto;box-shadow:none;overflow:visible}
+  .slide{display:block !important;position:relative;page-break-after:always;break-after:page;break-inside:avoid}
+  .slide:last-child{page-break-after:auto;break-after:auto}
+  .step{opacity:1 !important;transition:none}
+  .ui,.navbtn,.slide .notes{display:none !important}
+  .vid video,.vid .playhint{display:none !important}
+  .vid .print-poster{display:block !important}
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+<section class="slide s1" data-kind="main" data-title="From 48% Loss to Zero">
+<div class="left">
+  <div class="eyebrow">CEG5101 CA2 · Group 5</div>
+  <h1>From 48% Loss to Zero</h1>
+  <p class="subtitle">An Anomaly-Aware Routing and Blocking Controller · CEG5101 CA2</p>
+  <div class="big"><span class="red">48%</span><span class="arr">→</span><span class="blue">0%</span></div>
+  <p class="cap">h1→h6 loss: worst second before detection vs after the block (R1, case b)</p>
+</div>
+<figure class="fig right"><img src="../assets/figures/hook_loss_zoom.png" alt="Per-second loss of h1 to h6 in case b"></figure>
+<div class="team"><b>Group 5</b> · Yang Kaiming (A0326309E) · Chen Danze (A0328226E)<br>
+<span class="muted">12 Nov 2026 · 10:25–10:50 · SDE1-SR1 · Ryu 4.34 · OpenFlow 1.3 · Mininet</span></div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Overview · C1</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:27 · slot 0:00–0:30</p><p>Good morning. I'm Kaiming, and this is Danze. Forty-eight percent: that is what a legitimate flow from h1 to h6 lost in its worst second, before our controller caught the flood on its link. About four seconds after the flood began, loss was zero, and it stayed zero. Today: those four seconds, and the design behind them.</p><p class="nnote">Gesture at the red 48% and at the red bars on the right. No separate transition line: the first sentence of slide 2 does that.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Task 1: One Mesh, One Flow to Protect, Three Attacks"><h2>Task 1: One Mesh, One Flow to Protect, Three Attacks</h2>
+<div class="row" style="height:800px;gap:40px">
+  <div class="col" style="width:660px;gap:16px;padding-top:30px">
+    <div class="vid loop" style="height:372px"><video poster="../../report/source/figures/task1_miniedit_canvas.png" muted loop playsinline preload="auto" data-loop><source src="../assets/video/miniedit_build.mp4" type="video/mp4"></video><img class="print-poster" src="../../report/source/figures/task1_miniedit_running.png" alt="MiniEdit"></div>
+    <div class="small muted">MiniEdit in the Mininet 2.3.0 VM · OpenFlow 1.3 · pingall 0% dropped</div>
+    <div class="body" style="margin-top:18px">6 switches · host h<i>i</i> on s<i>i</i><br>40 Mbps links · C0 = link delay (ms)</div>
+    <div class="legend" style="margin-top:22px;flex-direction:column;align-items:flex-start;gap:12px">
+      <span><span class="sw"></span>h1→h6 s1-s2-s6 = 19</span>
+      <span><span class="sw o"></span>backup s1-s2-s3-s6 = 22</span>
+      <span class="step" data-step="1"><span class="sw r"></span>attacks a · b · c</span>
+    </div>
+  </div>
+  <div style="flex:1;height:800px;margin-top:-20px"><svg class="topo" viewBox="0 0 1000 700" role="img" aria-label="Six-switch mesh with link costs">
+<defs><marker id="t2-red" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="23" markerHeight="23" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d62728"/></marker><marker id="t2-blue" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="23" markerHeight="23" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2a78d6"/></marker><marker id="t2-orange" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="23" markerHeight="23" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#eb6834"/></marker><marker id="t2-ink" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="23" markerHeight="23" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b0b0b"/></marker><marker id="t2-grey" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="23" markerHeight="23" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#898781"/></marker></defs>
+<line x1="220" y1="80" x2="220" y2="230" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="80" x2="500" y2="230" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="780" y1="80" x2="780" y2="230" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="220" y1="640" x2="220" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="640" x2="500" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="780" y1="640" x2="780" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="220" y1="230" x2="500" y2="230" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="230" x2="780" y2="230" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="220" y1="490" x2="500" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="490" x2="780" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="220" y1="230" x2="220" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="230" x2="500" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="780" y1="230" x2="780" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="220" y1="230" x2="500" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="230" x2="220" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="500" y1="230" x2="780" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<line x1="780" y1="230" x2="500" y2="490" stroke="#c9c8c1" stroke-width="4"/>
+<g class="step" data-step="2"><polyline points="500.0,230.0 780.0,490.0" fill="none" stroke="#f5c400" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/></g>
+<polyline points="220.0,80.0 220.0,230.0 500.0,230.0 780.0,490.0 780.0,640.0" fill="none" stroke="#2a78d6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<polyline points="220.0,214.0 500.0,214.0 780.0,214.0 780.0,490.0" fill="none" stroke="#eb6834" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="1.0" stroke-dasharray="16 10"/>
+<g class="step" data-step="1"><polyline points="484.0,106.0 484.0,246.0 796.0,246.0 796.0,110.0" fill="none" stroke="#d62728" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="1.0" stroke-dasharray="2 11" marker-end="url(#t2-red)"/><circle cx="640" cy="282" r="19" fill="#d62728"/><text x="640" y="283" font-size="24" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">a</text></g>
+<g class="step" data-step="2"><polyline points="516.0,106.0 516.0,269.4 762.0,497.8 762.0,610.0" fill="none" stroke="#d62728" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="1.0" marker-end="url(#t2-red)"/><circle cx="548" cy="150" r="19" fill="#d62728"/><text x="548" y="151" font-size="24" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">b</text><g><rect x="859.0" y="384.1" width="91.9" height="31.9" rx="15.9" fill="#fff7d1" stroke="#f5c400" stroke-width="1.5"/><text x="905.0" y="401.0" font-size="22" font-weight="700" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">shared</text></g><line x1="866" y1="408" x2="728" y2="436" stroke="#52514e" stroke-width="2"/></g>
+<g class="step" data-step="3"><polyline points="500.0,614.0 500.0,490.0 798.0,213.3 798.0,490.0 798.0,610.0" fill="none" stroke="#d62728" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="1.0" stroke-dasharray="18 8 3 8" marker-end="url(#t2-red)"/><circle cx="455" cy="575" r="19" fill="#d62728"/><text x="455" y="576" font-size="24" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">c</text><g><rect x="587.9" y="532.0" width="104.2" height="31.9" rx="15.9" fill="#fdeaea" stroke="#d62728" stroke-width="1.5"/><text x="640.0" y="549.0" font-size="22" font-weight="700" fill="#d62728" text-anchor="middle" dominant-baseline="central">16 < 20</text></g></g>
+<rect x="174.0" y="200.0" width="92.0" height="60.0" rx="10.0" fill="#232a36"/><text x="220.0" y="231.0" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s1</text>
+<rect x="454.0" y="200.0" width="92.0" height="60.0" rx="10.0" fill="#232a36"/><text x="500.0" y="231.0" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s2</text>
+<rect x="734.0" y="200.0" width="92.0" height="60.0" rx="10.0" fill="#232a36"/><text x="780.0" y="231.0" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s3</text>
+<rect x="174.0" y="460.0" width="92.0" height="60.0" rx="10.0" fill="#232a36"/><text x="220.0" y="491.0" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s4</text>
+<rect x="454.0" y="460.0" width="92.0" height="60.0" rx="10.0" fill="#232a36"/><text x="500.0" y="491.0" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s5</text>
+<rect x="734.0" y="460.0" width="92.0" height="60.0" rx="10.0" fill="#232a36"/><text x="780.0" y="491.0" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s6</text>
+<rect x="184.0" y="55.0" width="72.0" height="50.0" rx="6.0" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="220.0" y="81.0" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h1</text>
+<rect x="464.0" y="55.0" width="72.0" height="50.0" rx="6.0" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="500.0" y="81.0" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h2</text>
+<rect x="744.0" y="55.0" width="72.0" height="50.0" rx="6.0" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="780.0" y="81.0" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h3</text>
+<rect x="184.0" y="615.0" width="72.0" height="50.0" rx="6.0" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="220.0" y="641.0" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h4</text>
+<rect x="464.0" y="615.0" width="72.0" height="50.0" rx="6.0" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="500.0" y="641.0" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h5</text>
+<rect x="744.0" y="615.0" width="72.0" height="50.0" rx="6.0" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="780.0" y="641.0" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h6</text>
+<g><rect x="344.6" y="214.1" width="30.8" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="360.0" y="231.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">5</text></g>
+<g><rect x="618.7" y="214.1" width="42.6" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="640.0" y="231.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">10</text></g>
+<g><rect x="338.7" y="474.1" width="42.6" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="360.0" y="491.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">15</text></g>
+<g><rect x="618.7" y="474.1" width="42.6" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="640.0" y="491.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">20</text></g>
+<g><rect x="204.6" y="344.1" width="30.8" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="220.0" y="361.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">8</text></g>
+<g><rect x="478.7" y="344.1" width="42.6" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="500.0" y="361.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">12</text></g>
+<g><rect x="764.6" y="344.1" width="30.8" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="780.0" y="361.0" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">7</text></g>
+<g><rect x="274.3" y="284.2" width="42.6" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="295.6" y="301.2" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">18</text></g>
+<g><rect x="409.0" y="284.2" width="30.8" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="424.4" y="301.2" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">6</text></g>
+<g><rect x="554.3" y="284.2" width="42.6" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="575.6" y="301.2" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">14</text></g>
+<g><rect x="689.0" y="284.2" width="30.8" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="704.4" y="301.2" font-size="22" font-weight="500" fill="#52514e" text-anchor="middle" dominant-baseline="central">9</text></g>
+</svg></div>
+</div>
+<div style="position:absolute;left:88px;bottom:76px" class="body"><span class="chip yellow">Running example: case b (s2–s6)</span></div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T1 · Topology · C1</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:41 · slot 0:30–1:15</p><p>Here is the network, and the flow we protect. Host hi sits on switch si; each edge shows its cost C0, the link delay in milliseconds. Our flow, h1 to h6, takes s1, s2, s6 at cost 19, the blue line; the orange backup costs 22.</p><p><span class="cue">[click]</span> Attack a, h2 to h3, uses s2–s3 and misses our path. <span class="cue">[click]</span> Attack b, h2 to h6, shares s2–s6: our running example. <span class="cue">[click]</span> Attack c, h5 to h6, takes s5, s3, s6: 16 beats 20.</p><p>Who decides where this flow goes? One loop in the controller.</p><p class="nnote">On the left: the same mesh built in MiniEdit in the Mininet 2.3.0 VM (loops silently, no click needed). Host links are 40 Mbps and 15 ms; hosts are 10.0.0.i/24.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Two Reference Controllers, Two Blind Spots, One 2-Second Loop"><h2>Two Reference Controllers, Two Blind Spots, One 2-Second Loop</h2>
+<div class="row" style="gap:28px;align-items:center;margin-top:6px">
+  <div class="card" style="width:500px"><div class="mono" style="font-size:25px;font-weight:700">resilient_controller</div>
+    <div class="body">routes, blind to attacks</div><span class="chip red" style="margin-top:8px">blind spot</span></div>
+  <div class="card" style="width:500px"><div class="mono" style="font-size:25px;font-weight:700">anomaly_detection</div>
+    <div class="body">blocks, never reroutes</div><span class="chip red" style="margin-top:8px">blind spot</span></div>
+  <div style="font-size:60px;color:var(--ink3)">→</div>
+  <div class="card" style="width:480px;background:var(--sw);color:#fff;border-color:var(--sw)"><div class="mono" style="font-size:25px;font-weight:700">integrated_controller</div>
+    <div class="body" style="color:#dfe3ea">one loop, both jobs</div></div>
+</div>
+<div class="step" data-step="1" style="width:1300px;height:520px;margin:34px auto 0"><svg class="loop" viewBox="0 0 1300 520" role="img" aria-label="Control loop">
+<defs><marker id="lp-red" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="29" markerHeight="29" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d62728"/></marker><marker id="lp-blue" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="29" markerHeight="29" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2a78d6"/></marker><marker id="lp-orange" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="29" markerHeight="29" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#eb6834"/></marker><marker id="lp-ink" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="29" markerHeight="29" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b0b0b"/></marker><marker id="lp-grey" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="29" markerHeight="29" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#898781"/></marker></defs>
+<rect x="150" y="45" width="360" height="130" rx="18" fill="#fff" stroke="#0b0b0b" stroke-width="3"/>
+<text x="330" y="106" font-size="40" font-weight="700" fill="#0b0b0b" text-anchor="middle">Measure</text>
+<text x="330" y="148" font-size="25" fill="#52514e" text-anchor="middle">FlowStats · PortStats</text>
+<rect x="790" y="45" width="360" height="130" rx="18" fill="#fff" stroke="#d62728" stroke-width="3"/>
+<text x="970" y="106" font-size="40" font-weight="700" fill="#d62728" text-anchor="middle">Detect</text>
+<text x="970" y="148" font-size="25" fill="#52514e" text-anchor="middle">over T → drop rule</text>
+<rect x="790" y="345" width="360" height="130" rx="18" fill="#fff" stroke="#0b0b0b" stroke-width="3"/>
+<text x="970" y="406" font-size="40" font-weight="700" fill="#0b0b0b" text-anchor="middle">Price</text>
+<text x="970" y="448" font-size="25" fill="#52514e" text-anchor="middle">Eq. (1) link cost</text>
+<rect x="150" y="345" width="360" height="130" rx="18" fill="#fff" stroke="#0b0b0b" stroke-width="3"/>
+<text x="330" y="406" font-size="40" font-weight="700" fill="#0b0b0b" text-anchor="middle">Route</text>
+<text x="330" y="448" font-size="25" fill="#52514e" text-anchor="middle">per flow, egress first</text>
+<line x1="520" y1="110" x2="772" y2="110" stroke="#0b0b0b" stroke-width="5" marker-end="url(#lp-ink)"/>
+<line x1="970" y1="182" x2="970" y2="330" stroke="#d62728" stroke-width="9" marker-end="url(#lp-red)"/>
+<g><rect x="1029.0" y="236.2" width="102.0" height="43.5" rx="21.8" fill="#fdeaea" stroke="#d62728" stroke-width="1.5"/><text x="1080.0" y="259.0" font-size="30" font-weight="800" fill="#d62728" text-anchor="middle" dominant-baseline="central">A = 1</text></g>
+<line x1="780" y1="410" x2="528" y2="410" stroke="#0b0b0b" stroke-width="5" marker-end="url(#lp-ink)"/>
+<line x1="330" y1="338" x2="330" y2="190" stroke="#0b0b0b" stroke-width="5" marker-end="url(#lp-ink)"/>
+<text x="650" y="250" font-size="34" font-weight="700" fill="#2a78d6" text-anchor="middle">poll every 2 s</text>
+<text x="650" y="292" font-size="24" fill="#52514e" text-anchor="middle">one loop, one shared signal</text>
+</svg></div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Design · C1 + C2</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:38 · slot 1:15–2:00</p><p>We started from two reference controllers, each with one blind spot: one routes but cannot see an attack; the other blocks but never moves traffic.</p><p><span class="cue">[click]</span> So we merged them into one loop, polled every 2 seconds: measure, detect, price, route. The design reason is one shared signal: links a blocked source used get A = 1, the red arrow. In case b, A = 1 lands on s2–s6.</p><p>First job of that loop: find the attacker, not the victim.</p><p class="nnote">Only if asked: the reference cost table is for an old 4-switch topology (D1); the reference detector updates before it compares, so its real threshold is about 21× the baseline (D5). Measure = FlowStats per source at its ingress switch and PortStats per link. Forwarding details (ARP proxy, flooding only to host ports, packet-in ignored until all 11 links are discovered, D11) are for Q&A.</p><p class="nnote">Short version if rehearsal runs long: “We merged the two reference controllers into one 2-second loop: measure, detect, price, route.”</p></aside></section>
+<section class="slide " data-kind="main" data-title="Task 2: Catch the Attacker, Not the Victim"><h2>Task 2: Catch the Attacker, Not the Victim</h2>
+<div class="row" style="gap:40px;align-items:flex-start">
+  <table class="t" style="width:1010px;margin-top:20px">
+    <tr><th style="width:250px">Naive</th><th style="width:320px">Fails because</th><th>Our rule</th></tr>
+    <tr><td>Count echo replies</td><td class="red">Victim h6 gets blocked</td><td><b>Skip ICMP echo replies</b> <span class="d">D4</span></td></tr>
+    <tr class="step" data-step="1"><td>Update EMA, then compare</td><td class="red">≈21× threshold, baseline poisoned</td><td><b>Compare first, never learn anomalies</b> <span class="d">D5</span></td></tr>
+    <tr class="step" data-step="2"><td>Fixed 3× multiple</td><td class="red">Ignores how bursty sources are</td><td><b>max(3b, b+4σ, 500) + warm-up</b> <span class="d">D6</span></td></tr>
+  </table>
+  <figure class="fig" style="width:690px;height:800px;align-items:flex-start"><img src="../assets/figures/fig6_detector_h2.png" alt="Detector on h2 during case b" style="width:690px"></figure>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T2 · Detection · C2 + C1</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 1:10 · slot 2:00–3:15</p><p>The design reason behind each detection rule is a concrete failure. Count all ICMP, and the victim's echo replies get h6 blocked, with our flow. So we skip echo replies.</p><p><span class="cue">[click]</span> The reference detector updates before it compares: the real threshold becomes about 21 times the baseline, and the attack poisons that baseline. We compare first and never learn from an anomaly.</p><p><span class="cue">[click]</span> A fixed 3x ignores how bursty a source is, so our threshold is the largest of 3b, b plus 4 sigma, and 500, after a warm-up. A block is a priority-5000 drop rule on all six switches.</p><p>On the right, case b in R1: h2 hit 4,994 packets per second, the top red point, against a threshold of 1,046, and was blocked. h6 was never flagged.</p><p><b>H1 →</b> So the detector answers one question: who is attacking. How does routing use that answer? Danze?</p><p class="nnote">Not on screen: rules match ipv4_src (D2); each packet is counted once, at its ingress switch (D3); detector EMA weight 0.3, as in the reference code; auto-unblock after 10 s quiet (D8/D12).</p></aside></section>
+<section class="slide " data-kind="main" data-title="Task 3: Price the Attack into the Link"><h2>Task 3: Price the Attack into the Link</h2>
+<div style="display:flex;align-items:flex-start;gap:26px;font-size:54px;font-weight:700;margin-top:4px">
+  <div style="padding-top:2px">C<sub style="font-size:30px">ij</sub>(t) =</div>
+  <div style="text-align:center"><div>C0</div><div class="small muted" style="font-weight:500">static: link delay (ms)</div></div>
+  <div style="padding-top:2px">+</div>
+  <div style="text-align:center"><div>α · R/R<sub style="font-size:30px">max</sub></div><div class="small muted" style="font-weight:500">load weight α = 10:<br>fast, fades after the block</div></div>
+  <div style="padding-top:2px">+</div>
+  <div style="text-align:center" class="red"><div>β · A</div><div class="small" style="font-weight:600">anomaly weight β = 30:<br>memory while the attack lasts</div></div>
+</div>
+<div class="row" style="margin-top:20px;gap:44px;align-items:flex-start">
+  <figure class="fig step" data-step="1" style="width:1000px;height:590px"><img src="../assets/figures/cost_s2s6.png" alt="Cost of s2-s6 split by term" style="width:1000px"></figure>
+  <div class="col" style="gap:26px;width:690px">
+    <div class="card step" data-step="2" style="font-size:27px;line-height:1.35;border-color:#f2b8b8">β = 30 ≫ <b>≈7.7 needed</b><br><span class="muted small">detour 3 + own load ≈2.7 + margin 2</span></div>
+    <div class="step" data-step="3"><div class="small muted" style="font-weight:700;margin-bottom:6px">Prediction: plateau (C0 + 30) / C0</div>
+    <table class="t num" style="width:100%"><tr><th style="text-align:left">link</th><th>case</th><th>C0</th><th>plateau</th></tr>
+      <tr><td style="text-align:left">s2-s3</td><td>a</td><td>10</td><td><b>4.0</b></td></tr>
+      <tr><td style="text-align:left" class="red">s2-s6</td><td>b</td><td>14</td><td class="red"><b>3.14</b></td></tr>
+      <tr><td style="text-align:left">s3-s5</td><td>c</td><td>9</td><td><b>4.33</b></td></tr>
+      <tr><td style="text-align:left">s3-s6</td><td>c</td><td>7</td><td><b>5.29</b></td></tr></table></div>
+  </div>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T3 · Design reasoning · C2 + C1</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 1:10 · slot 3:15–4:30</p><p>Thanks, Kaiming. Dijkstra only understands numbers, so we put the verdict into the link cost, back to s2–s6. Cost is C0, plus load weight alpha 10 times utilisation, plus anomaly weight beta 30 times the flag A. The load term reacts fast, but after the block it fades within a few polls. Beta times A is the memory: A stays 1 while the drop rule keeps counting, then 10 seconds more.</p><p><span class="cue">[click]</span> On s2–s6: 1.19 before the flood, 3.67 at the block, then a plateau at 3.14.</p><p><span class="cue">[click]</span> Beta must beat the 3-longer detour, our own load of about 2.7, and margin 2: about 7.7. Thirty leaves room.</p><p><span class="cue">[click]</span> Testable prediction: each attacked link plateaus at C0 plus 30, over C0, the table on the right. We check it on slides 10 and 11.</p><p>A price alone moves nothing. When should a flow actually move?</p><p class="nnote">Why hold A (D7): the flood is dropped at the ingress, so R falls to 0 within a few polls. A stays 1 while the drop rate is at least 0.5T, then 10 s more. Why 0.5T (D8): the attacker's normal 1 pps ping also hits the drop rule. At the moment of the block the leftover flood load helps: R1 needed only β > 3.2, R3 > 6.9. From static costs alone: 22 − 19 + 2 = 5. Rmax = 40 Mbps; C0 rewritten for the 11 links (D1). s2-s6 returns to ×1.0 at 151.6 s, when h1 is still on the detour.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Task 4: Move Only When Clearly Cheaper, Install Egress First"><h2>Task 4: Move Only When Clearly Cheaper, Install Egress First</h2>
+<div class="row" style="gap:56px">
+  <div class="col" style="width:760px;gap:24px">
+    <div class="card" style="display:flex;gap:22px;align-items:center"><span class="chip grey" style="font-size:30px">1</span><div class="body"><b>What-if:</b> add own load <span class="muted small">D9</span></div></div>
+    <div class="card step" data-step="1" style="display:flex;gap:22px;align-items:center"><span class="chip grey" style="font-size:30px">2</span><div class="body"><b>Move only if ≥ 2 cheaper</b></div></div>
+    <div class="card step" data-step="2" style="display:flex;gap:22px;align-items:center"><span class="chip grey" style="font-size:30px">3</span><div class="body"><b>Egress first</b>, then delete stale <span class="muted small">D10</span></div></div>
+    <div class="step" data-step="3" style="margin-top:10px">
+<div class="col" style="gap:14px;font-size:24px">
+  <div><b>leave</b> <span class="muted">(115.6 s)</span>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px"><span style="width:110px" class="muted">stay</span><span style="display:inline-block;height:24px;width:411px;background:var(--main);border-radius:4px"></span><b>58.8</b></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px"><span style="width:110px" class="muted">move</span><span style="display:inline-block;height:24px;width:209px;background:var(--detour);border-radius:4px"></span><b>30.0</b> → moves</div></div>
+  <div><b>return</b> <span class="muted">(151.6 s)</span>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px"><span style="width:110px" class="muted">original</span><span style="display:inline-block;height:24px;width:171px;background:var(--main);border-radius:4px"></span><b>24.5</b> → returns</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px"><span style="width:110px" class="muted">detour</span><span style="display:inline-block;height:24px;width:210px;background:var(--detour);border-radius:4px"></span><b>30.1</b></div></div>
+</div></div>
+  </div>
+  <div class="col" style="flex:1">
+    <div class="step" data-step="2" style="width:960px;height:560px"><svg class="topo6" viewBox="0 0 960 560" role="img" aria-label="Egress-first installation">
+<defs><marker id="t6-red" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d62728"/></marker><marker id="t6-blue" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2a78d6"/></marker><marker id="t6-orange" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#eb6834"/></marker><marker id="t6-ink" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b0b0b"/></marker><marker id="t6-grey" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#898781"/></marker></defs>
+<line x1="380" y1="250" x2="670" y2="470" stroke="#898781" stroke-width="5" stroke-linecap="round" stroke-dasharray="12 10"/>
+<g><rect x="434.4" y="379.1" width="141.2" height="31.9" rx="15.9" fill="#ffffff" stroke="#d9d8d2" stroke-width="1.5"/><text x="505.0" y="396.0" font-size="22" font-weight="500" fill="#898781" text-anchor="middle" dominant-baseline="central">old: s2-s6</text></g>
+<line x1="90" y1="80" x2="90" y2="250" stroke="#eb6834" stroke-width="9" stroke-linecap="round"/>
+<line x1="90" y1="250" x2="380" y2="250" stroke="#eb6834" stroke-width="9" stroke-linecap="round"/>
+<line x1="380" y1="250" x2="670" y2="250" stroke="#eb6834" stroke-width="9" stroke-linecap="round"/>
+<line x1="670" y1="250" x2="670" y2="470" stroke="#eb6834" stroke-width="9" stroke-linecap="round"/>
+<line x1="670" y1="470" x2="870" y2="470" stroke="#eb6834" stroke-width="9" stroke-linecap="round"/>
+<rect x="54" y="55" width="72" height="50" rx="6" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="90" y="81" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h1</text>
+<rect x="44" y="220" width="92" height="60" rx="10" fill="#232a36"/><text x="90" y="251" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s1</text>
+<rect x="334" y="220" width="92" height="60" rx="10" fill="#232a36"/><text x="380" y="251" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s2</text>
+<rect x="624" y="220" width="92" height="60" rx="10" fill="#232a36"/><text x="670" y="251" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s3</text>
+<rect x="624" y="440" width="92" height="60" rx="10" fill="#232a36"/><text x="670" y="471" font-size="28" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s6</text>
+<rect x="834" y="445" width="72" height="50" rx="6" fill="#fff" stroke="#232a36" stroke-width="2.5"/><text x="870" y="471" font-size="25" font-weight="600" fill="#0b0b0b" text-anchor="middle" dominant-baseline="central">h6</text>
+<circle cx="752" cy="418" r="22" fill="#0b0b0b"/><text x="752" y="419" font-size="25" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">1</text><text x="752" y="460" font-size="24" fill="#0b0b0b" text-anchor="middle" font-weight="600"></text>
+<text x="784" y="426" font-size="24" fill="#0b0b0b" font-weight="600">s6 first</text>
+<circle cx="670" cy="170" r="22" fill="#0b0b0b"/><text x="670" y="171" font-size="25" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">2</text><text x="670" y="128" font-size="24" fill="#0b0b0b" text-anchor="middle" font-weight="600">new rule → s6</text>
+<circle cx="380" cy="170" r="22" fill="#0b0b0b"/><text x="380" y="171" font-size="25" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">3</text><text x="380" y="128" font-size="24" fill="#0b0b0b" text-anchor="middle" font-weight="600">switch-over → s3</text>
+<circle cx="90" cy="170" r="22" fill="#0b0b0b"/><text x="90" y="171" font-size="25" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">4</text><text x="90" y="212" font-size="24" fill="#0b0b0b" text-anchor="middle" font-weight="600"></text>
+<text x="128" y="178" font-size="24" fill="#52514e" font-weight="600">unchanged</text>
+</svg></div>
+  </div>
+</div>
+<div class="step body" data-step="3" style="position:absolute;left:88px;bottom:80px"><b>Same rule:</b> A = 1 → leave · A → 0 → return · link down → cost ∞</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T4 · Rerouting · C2 + C1</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 0:55 · slot 4:30–5:30</p><p>Every poll, each flow compares its path with the cheapest alternative. First, a what-if: we add the flow's own load to candidate links it does not use yet; otherwise h1's own 10 megabits make its current path look worse, and it flaps.</p><p><span class="cue">[click]</span> Second, move only if at least 2 cheaper: that margin is our hysteresis.</p><p><span class="cue">[click]</span> Third, egress first: s6, then s3, then the branch point s2 switches over; s1 is unchanged. No packet meets a missing rule.</p><p><span class="cue">[click]</span> Case b in R1, the bars: stay 58.8, move 30.0, so it leaves; after the hold, 24.5 beats 30.1, so it returns. Link failures use the same rule.</p><p><b>H2 →</b> That is the design. Does it work? Kaiming?</p><p class="nnote">Details: when leaving, s6 keeps its rule, s3 gets a new rule to s6, s2 is rewritten from →s6 to →s3, s1 is rewritten in place (next hop still s2). Nothing is deleted when leaving; the stale rule on s3 is deleted on the return.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Experiment: One Timeline, Three Cases, Three Runs"><h2>Experiment: One Timeline, Three Cases, Three Runs</h2>
+<div style="width:1744px;height:300px;margin-top:40px"><svg class="timeline" viewBox="0 0 1760 300" role="img" aria-label="Experiment timeline">
+<defs><marker id="tl-red" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d62728"/></marker><marker id="tl-blue" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2a78d6"/></marker><marker id="tl-orange" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#eb6834"/></marker><marker id="tl-ink" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b0b0b"/></marker><marker id="tl-grey" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#898781"/></marker></defs>
+<rect x="60.0" y="40" width="257.1" height="150" fill="#f3f3ef"/>
+<text x="188.5" y="125" font-size="26" fill="#52514e" text-anchor="middle">baseline 40 s</text>
+<rect x="317.7" y="40" width="164.5" height="150" fill="#e7e6e0" stroke="#d9d8d2" stroke-width="0"/>
+<text x="400.0" y="100" font-size="34" font-weight="800" fill="#0b0b0b" text-anchor="middle">a</text>
+<text x="400.0" y="138" font-size="24" fill="#0b0b0b" text-anchor="middle">h2→h3</text>
+<text x="400.0" y="172" font-size="21" fill="#52514e" text-anchor="middle">flood 25 s</text>
+<text x="626.8" y="125" font-size="22" fill="#52514e" text-anchor="middle">recover 45 s</text>
+<rect x="778.5" y="40" width="165.2" height="150" fill="#e7e6e0" stroke="#d62728" stroke-width="4"/>
+<text x="861.0" y="100" font-size="34" font-weight="800" fill="#d62728" text-anchor="middle">b</text>
+<text x="861.0" y="138" font-size="24" fill="#0b0b0b" text-anchor="middle">h2→h6</text>
+<text x="861.0" y="172" font-size="21" fill="#52514e" text-anchor="middle">flood 25 s</text>
+<text x="1088.2" y="125" font-size="22" fill="#52514e" text-anchor="middle">recover 45 s</text>
+<rect x="1239.2" y="40" width="165.2" height="150" fill="#e7e6e0" stroke="#d9d8d2" stroke-width="0"/>
+<text x="1321.8" y="100" font-size="34" font-weight="800" fill="#0b0b0b" text-anchor="middle">c</text>
+<text x="1321.8" y="138" font-size="24" fill="#0b0b0b" text-anchor="middle">h5→h6</text>
+<text x="1321.8" y="172" font-size="21" fill="#52514e" text-anchor="middle">flood 25 s</text>
+<text x="1549.0" y="125" font-size="22" fill="#52514e" text-anchor="middle">recover 45 s</text>
+<line x1="60.0" y1="215" x2="1700.0" y2="215" stroke="#2a78d6" stroke-width="8" stroke-linecap="round"/>
+<text x="60.0" y="248" font-size="24" fill="#2a78d6">h1→h6: 10 Mbps UDP (≈890 pkt/s) + ping every 0.5 s, whole run</text>
+<line x1="60.0" y1="190" x2="60.0" y2="200" stroke="#52514e" stroke-width="2"/>
+<text x="60.0" y="290" font-size="22" fill="#52514e" text-anchor="middle">0 s</text>
+<line x1="381.3" y1="190" x2="381.3" y2="200" stroke="#52514e" stroke-width="2"/>
+<text x="381.3" y="290" font-size="22" fill="#52514e" text-anchor="middle">50 s</text>
+<line x1="702.6" y1="190" x2="702.6" y2="200" stroke="#52514e" stroke-width="2"/>
+<text x="702.6" y="290" font-size="22" fill="#52514e" text-anchor="middle">100 s</text>
+<line x1="1023.9" y1="190" x2="1023.9" y2="200" stroke="#52514e" stroke-width="2"/>
+<text x="1023.9" y="290" font-size="22" fill="#52514e" text-anchor="middle">150 s</text>
+<line x1="1345.3" y1="190" x2="1345.3" y2="200" stroke="#52514e" stroke-width="2"/>
+<text x="1345.3" y="290" font-size="22" fill="#52514e" text-anchor="middle">200 s</text>
+<line x1="1698.7" y1="190" x2="1698.7" y2="200" stroke="#52514e" stroke-width="2"/>
+<text x="1698.7" y="290" font-size="22" fill="#52514e" text-anchor="middle">255 s</text>
+</svg></div>
+<div class="small muted" style="margin:20px 0 14px;font-weight:700">Measured independently of the controller</div>
+<div class="row" style="gap:22px"><div class="card" style="flex:1;display:flex;gap:18px;align-items:flex-start"><svg viewBox="0 0 48 48" class="ico" width="56" height="56" style="flex:none"><path d="M6 38 L16 24 L24 30 L34 14 L42 20" fill="none" stroke="#2a78d6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="42" x2="42" y2="42" stroke="#52514e" stroke-width="3"/></svg><div><div class="body" style="font-weight:700">iperf at h6</div><div class="small muted">loss, throughput per second</div><div class="mono" style="font-size:21px;color:var(--ink2);margin-top:6px">iperf_server.txt</div></div></div><div class="card" style="flex:1;display:flex;gap:18px;align-items:flex-start"><svg viewBox="0 0 48 48" class="ico" width="56" height="56" style="flex:none"><circle cx="20" cy="20" r="12" fill="none" stroke="#d62728" stroke-width="4"/><line x1="29" y1="29" x2="42" y2="42" stroke="#d62728" stroke-width="5" stroke-linecap="round"/></svg><div><div class="body" style="font-weight:700">tcpdump at the victim</div><div class="small muted">attack packets that got through</div><div class="mono" style="font-size:21px;color:var(--ink2);margin-top:6px">victim_capture_*.txt</div></div></div><div class="card" style="flex:1;display:flex;gap:18px;align-items:flex-start"><svg viewBox="0 0 48 48" class="ico" width="56" height="56" style="flex:none"><rect x="8" y="6" width="32" height="36" rx="4" fill="none" stroke="#0b0b0b" stroke-width="4"/><line x1="15" y1="17" x2="33" y2="17" stroke="#52514e" stroke-width="3"/><line x1="15" y1="25" x2="33" y2="25" stroke="#52514e" stroke-width="3"/><line x1="15" y1="33" x2="27" y2="33" stroke="#52514e" stroke-width="3"/></svg><div><div class="body" style="font-weight:700">Controller logs</div><div class="small muted">events, link costs, paths</div><div class="mono" style="font-size:21px;color:var(--ink2);margin-top:6px">controller/*.csv</div></div></div><div class="card" style="flex:1;display:flex;gap:18px;align-items:flex-start"><svg viewBox="0 0 48 48" class="ico" width="56" height="56" style="flex:none"><rect x="6" y="10" width="36" height="8" rx="2" fill="#eb6834"/><rect x="6" y="22" width="36" height="8" rx="2" fill="#c9c8c1"/><rect x="6" y="34" width="36" height="8" rx="2" fill="#c9c8c1"/></svg><div><div class="body" style="font-weight:700">Flow-table dumps</div><div class="small muted">drop-rule counters</div><div class="mono" style="font-size:21px;color:var(--ink2);margin-top:6px">flows/*.txt</div></div></div></div>
+<div class="small muted" style="position:absolute;left:88px;bottom:80px">R1–R3 · container: userspace OVS, no link delay</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Method · C3</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:29 · slot 5:30–6:00</p><p>Thanks, Danze. One run, about four minutes, three floods. After a 40-second baseline, cases a, b and c each get a 25-second flood and 45 seconds of recovery: the grey bands. h1 sends 10 megabits of UDP to h6 throughout, measured by iperf and tcpdump, not by the controller. Three runs.</p><p>Here is case b from a real run.</p><p class="nnote"><b>LIVE DEMO:</b> at this point switch to the terminal and run <code>bash code/demo/live_demo.sh</code> (or <code>quick</code>); narrate with presentation/Live_Demo_Runbook_zh.pdf section 3, then come back to slide 9. Slide 8 (the recording) is the fallback if the live run fails (60-second rule). Instead of “Here is case b from a real run”, say: “Let us run it now.”</p><p class="nnote">Details: hping3 --icmp --flood -d 1000, about 4,700–4,800 pkt/s (≈39 Mbps) leaving the attacker; ping every 0.5 s; the other hosts send 1 pps background pings. The container has no link delays: routing is unaffected (it uses the C0 table), RTTs are just small. One timeline is 255 s. Short version: “Three 25-second floods on one timeline, measured with iperf and tcpdump, repeated three times.”</p></aside></section>
+<section class="slide " data-kind="main" data-title="Demo: Case b in a Real Run"><h2>Demo: Case b in a Real Run</h2>
+<div class="vid" style="width:1460px;height:821px;margin:0 auto"><video poster="../assets/video/demo_case_b_still_3.png" muted playsinline preload="auto" data-play-step="1"><source src="../assets/video/demo_case_b.mp4" type="video/mp4"></video><div class="playhint"></div><img class="print-poster" src="../assets/video/demo_case_b_still_3.png" alt="Case b demo"></div>
+<button class="navbtn" data-goto="15" style="right:88px;bottom:80px">Stills: slide 15</button>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T2 + T4 evidence · C1</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:55 · slot 6:00–7:00</p><p><span class="cue">[click to play, 50 s]</span></p><p><span class="tc">[0:03]</span> Normal: our flow on s1, s2, s6, no loss.</p><p><span class="tc">[0:09]</span> The flood starts; loss appears here, bottom left.</p><p><span class="tc">[0:15 paused frame]</span> One control step: h2 is over threshold and dropped on all switches, s2–s6 is marked, and our flow is on s1, s2, s3, s6.</p><p><span class="tc">[0:24]</span> The drop counter keeps rising, <span class="tc">[0:28]</span> and tcpdump at h6 sees zero attack packets.</p><p><span class="tc">[0:33]</span> Flood stops, ten-second hold, back to the short path.</p><p><span class="tc">[0:43 end card]</span> Was that one lucky run? Here are all nine floods.</p><p class="nnote"><b>With the live demo this slide is skipped</b>; use it only as the fallback.</p><p class="nnote">Do not introduce the panes: the title card does it. If the speaker falls behind, the partner pauses with K or a mouse click on the video; the next click goes on to slide 9. If the video will not play: type 15 + Enter (stills), then the button there returns to slide 9. Values in the log lines are this recording's own; the numbers on the end card are the report's.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Detection and Blocking Results: One or Two Polls, Then Nothing Gets Through"><h2>Detection and Blocking Results: One or Two Polls, Then Nothing Gets Through</h2>
+<div class="row" style="gap:60px">
+  <figure class="fig" style="width:900px;height:750px"><img src="../assets/figures/fig5_slide.png" alt="Flood packets sent vs reaching the victim" style="width:900px"></figure>
+  <div class="col" style="gap:30px;flex:1;padding-top:40px">
+    <div class="small muted" style="font-weight:700">Detection delay (flood start → block)</div>
+    <table class="t num" style="width:640px;font-size:34px">
+      <tr><th style="text-align:left">case</th><th>R1</th><th>R2</th><th>R3</th></tr>
+      <tr><td style="text-align:left">a</td><td>3.4 s</td><td>2.2 s</td><td>3.5 s</td></tr>
+      <tr><td style="text-align:left">b</td><td><b>3.8 s</b></td><td>2.6 s</td><td><b>1.5 s</b></td></tr>
+      <tr><td style="text-align:left">c</td><td>1.7 s</td><td>3.0 s</td><td>1.8 s</td></tr>
+    </table>
+    <div class="card body" style="width:640px;border-color:#b9d3f2"><b>0</b> attack packets later than 1 s after the block, in all nine floods.</div>
+  </div>
+</div>
+<div class="body" style="position:absolute;left:88px;bottom:80px">Every lost h1→h6 packet fell inside this detection delay.</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T2 check · C3</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:42 · slot 7:00–7:45</p><p>This result shows all nine floods were caught within one or two polls: 1.5 to 3.8 seconds, the table on the right. After each block, at most 101 in-flight packets arrived, within 28 milliseconds; no attack packet got through later than one second after the block. On the left, black is what reached the victim.</p><p>Why one or two polls? Samples come every 2.4 seconds; a flood that starts late in an interval gives a partial first sample.</p><p><b>H3 →</b> So the attacker is stopped every time. Did our legitimate flow survive? Danze?</p><p class="nnote">If asked: 3,608–14,251 attack packets reached the victim before the block, roughly flood rate × (delay − 0.5 s), since hping3 starts about 0.5 s after the timing mark; less in b and c because part of the flood is dropped on the congested link. The drop rule kept counting (R1 case b: n_packets = 31,253 on s2). R1 b took 3.8 s because its first sample, 491 pkt/s, was under the 500 floor and was learned (backup slide 19). In c the marked links are s3-s5 and s3-s6, the links the attack used. VM with link delays: 2.2 / 1.6 / 3.8 s.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Case b: Block and Reroute in One Control Interval"><h2>Case b: Block and Reroute in One Control Interval</h2>
+<div style="position:relative;width:1744px;height:794px;margin:0 auto">
+  <img src="../assets/figures/fig4b_caseb_zoom.png" alt="Case b: path, link cost and loss" style="width:1744px;display:block">
+  <div class="step" data-step="1">
+    <div class="hlbox" style="left:23.6%;top:65.4%;width:6.6%;height:23.6%"></div>
+    <div class="hllab" style="left:6.5%;top:57.2%"><b>1</b>before detection: 24 · 47 · 48 · 27 %</div>
+  </div>
+  <div class="step" data-step="2">
+    <div class="hlbox" style="left:27.6%;top:9%;width:8.4%;height:49%"></div>
+    <div class="hllab" style="left:37.2%;top:19.4%"><b>2</b>one step: h2 blocked · ×3.67 · moved (58.8 vs 30.0)</div>
+  </div>
+  <div class="step" data-step="3">
+    <div class="hlbox" style="left:55.5%;top:29.2%;width:18.6%;height:8.4%"></div>
+    <div class="hlbox" style="left:78.6%;top:9%;width:13.8%;height:25%"></div>
+    <div class="hllab" style="left:46%;top:39.4%"><b>3</b>A held: plateau (14+30)/14 · back at 151.6 s</div>
+  </div>
+</div>
+<div class="body" style="position:absolute;left:88px;bottom:80px"><span class="chip blue" style="font-size:26px">back ≈14 s after the flood</span></div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T4 + T5 · C3</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 1:26 · slot 7:45–9:15</p><p>Thanks, Kaiming. Case b is the real test for routing: h2 floods h6 over s2–s6, the link our flow uses. The dashed line is the block.</p><p><span class="cue">[click 1: box on 112–116 s]</span> Before detection, s2–s6 carries about 39 megabits of flood plus our 10, on a 40-megabit link. The queue overflows: in four seconds we lose 24, 47, 48 and 27 percent.</p><p><span class="cue">[click 2: dashed line at 115.6 s]</span> Then, in one control interval, three things happen together. h2 is blocked. s2–s6 is marked, and its cost jumps to 3.7 times. And our flow moves to s1, s2, s3, s6, because staying would cost 58.8 and moving costs 30. Loss drops to zero.</p><p><span class="cue">[click 3: plateau and dotted return line]</span> The flood load is gone, yet the cost holds at 3.14: fourteen plus beta, thirty, over fourteen, as predicted on slide 5, because h2 keeps hitting its drop rule. The flood ends, the flag is held ten more seconds, and about fourteen seconds after the flood the flow comes back. Same shape in all three runs: worst second 34 to 57 percent, zero after the block.</p><p class="nnote">Return time, three conventions (R1): 39.8 s after flood start; 14.8 s after start + 25 s (the report's 13.6–14.9 s for R1–R3); 14.1 s after the recorded flood end. Say “about 14 seconds after the flood”. Exactly 2 h1→h6 reroutes per run, none in a or c. Throughput and RTT (lowest second 5.41 / 4.55 / 6.74 Mbps; R1 RTT 0.5 → 20.5 ms) are on backup slide 17.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Task 5: Cost, Loss and Throughput over the Whole Run"><h2>Task 5: Cost, Loss and Throughput over the Whole Run</h2>
+<img src="../assets/figures/task5_fullrun_slide.png" alt="Whole run: cost, loss, throughput" style="width:1700px;display:block;margin:0 auto">
+<div class="body" style="position:absolute;left:88px;bottom:80px">s5-s6 stays at 1.0: never used <span class="muted">→ next slide</span></div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T5 · C3</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 0:40 · slot 9:15–10:00</p><p>This result confirms slide 5 on every attacked link: a spike at detection, a plateau at C0 plus 30 over C0, then baseline after the hold. Plateaus: 4.0 on s2–s3, 3.14 on s2–s6 in blue, 4.33 and 5.29 on s3–s5 and s3–s6; the same beta lifts a short link more.</p><p>Loss and throughput dip only in case b before detection, 48.4 percent and 5.41 megabits; c shows a 2.5 percent blip from h6's access link.</p><p>So why is s5–s6 flat, and why did h1 not move in a or c?</p><p class="nnote">In this figure s2-s6 is drawn in blue because it carries the main path. Links that carry h1 sit a little above 1 (s1-s2 at ×1.54: h1's 10 Mbps adds about 2.7 to C0 = 5). Every marked link is back at its baseline cost 13–15 s after the flood (10 s hold + 1–2 polls). The report's full-size Task 5 plots are on backup slide 17.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Cases a and c: Not Rerouting Is the Correct Answer"><h2>Cases a and c: Not Rerouting Is the Correct Answer</h2>
+<div class="row" style="gap:36px">
+  <div class="vid" style="width:1140px;height:641px;flex:none"><video poster="../assets/figures/replay_r1_poster.png" muted playsinline preload="auto" data-play-step="1"><source src="../assets/video/replay_r1.mp4" type="video/mp4"></video><div class="playhint"></div><img class="print-poster" src="../assets/figures/replay_r1_poster.png" alt="Replay of run R1"></div>
+  <div class="col" style="gap:18px;flex:1"><div class="card" style="display:flex;gap:20px;align-items:center;padding:16px 20px"><div style="width:200px;flex:none"><svg class="mini" viewBox="0 0 380 205" role="img" aria-label="case a"><line x1="45.0" y1="40.0" x2="190.0" y2="40.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="40.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="165.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="165.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="40.0" x2="45.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="45.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="40.0" stroke="#d62728" stroke-width="9" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="31.0" x2="190.0" y2="31.0" stroke="#2a78d6" stroke-width="5" stroke-linecap="round" opacity="1.0"/><line x1="195.9" y1="33.2" x2="340.9" y2="158.2" stroke="#2a78d6" stroke-width="5" stroke-linecap="round" opacity="1.0"/><rect x="17" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="45" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s1</text><rect x="162" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="190" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s2</text><rect x="307" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="335" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s3</text><rect x="17" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="45" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s4</text><rect x="162" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="190" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s5</text><rect x="307" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="335" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s6</text></svg></div><div><div style="font-size:26px;font-weight:700;line-height:1.3">a · h2→h3<br><span class="red">s2-s3 ×4.0</span></div><div class="small muted">h1→h6 stays<br>loss 0%</div></div></div><div class="card" style="display:flex;gap:20px;align-items:center;padding:16px 20px"><div style="width:200px;flex:none"><svg class="mini" viewBox="0 0 380 205" role="img" aria-label="case b"><line x1="45.0" y1="40.0" x2="190.0" y2="40.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="40.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="165.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="165.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="40.0" x2="45.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="45.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="165.0" stroke="#d62728" stroke-width="9" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="31.0" x2="190.0" y2="31.0" stroke="#eb6834" stroke-width="5" stroke-linecap="round" opacity="1.0" stroke-dasharray="10 6"/><line x1="190.0" y1="31.0" x2="335.0" y2="31.0" stroke="#eb6834" stroke-width="5" stroke-linecap="round" opacity="1.0" stroke-dasharray="10 6"/><line x1="344.0" y1="40.0" x2="344.0" y2="165.0" stroke="#eb6834" stroke-width="5" stroke-linecap="round" opacity="1.0" stroke-dasharray="10 6"/><rect x="17" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="45" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s1</text><rect x="162" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="190" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s2</text><rect x="307" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="335" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s3</text><rect x="17" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="45" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s4</text><rect x="162" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="190" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s5</text><rect x="307" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="335" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s6</text></svg></div><div><div style="font-size:26px;font-weight:700;line-height:1.3">b · h2→h6<br><span class="red">s2-s6 ×3.14</span></div><div class="small muted">moves, returns<br>worst second 34–57%</div></div></div><div class="card" style="display:flex;gap:20px;align-items:center;padding:16px 20px"><div style="width:200px;flex:none"><svg class="mini" viewBox="0 0 380 205" role="img" aria-label="case c"><line x1="45.0" y1="40.0" x2="190.0" y2="40.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="40.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="165.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="165.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="40.0" x2="45.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="45.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="45.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="40.0" x2="335.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="190.0" y2="165.0" stroke="#c9c8c1" stroke-width="3" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="190.0" y2="165.0" stroke="#d62728" stroke-width="9" stroke-linecap="round" opacity="1.0"/><line x1="335.0" y1="40.0" x2="335.0" y2="165.0" stroke="#d62728" stroke-width="9" stroke-linecap="round" opacity="1.0"/><line x1="190.0" y1="165.0" x2="335.0" y2="165.0" stroke="#898781" stroke-width="3" stroke-linecap="round" opacity="1.0" stroke-dasharray="6 6"/><line x1="45.0" y1="31.0" x2="190.0" y2="31.0" stroke="#2a78d6" stroke-width="5" stroke-linecap="round" opacity="1.0"/><line x1="195.9" y1="33.2" x2="340.9" y2="158.2" stroke="#2a78d6" stroke-width="5" stroke-linecap="round" opacity="1.0"/><rect x="17" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="45" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s1</text><rect x="162" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="190" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s2</text><rect x="307" y="22" width="56" height="36" rx="7" fill="#232a36"/><text x="335" y="41" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s3</text><rect x="17" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="45" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s4</text><rect x="162" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="190" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s5</text><rect x="307" y="147" width="56" height="36" rx="7" fill="#232a36"/><text x="335" y="166" font-size="23" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">s6</text></svg></div><div><div style="font-size:26px;font-weight:700;line-height:1.3">c · h5→h6<br><span class="red">s3-s5 ×4.33<br>s3-s6 ×5.29</span></div><div class="small muted">stays<br>worst second 2.5–6.1%</div></div></div>
+    <div class="legend small" style="gap:20px"><span><span class="sw" style="width:30px;border-top-width:6px"></span>h1→h6</span><span><span class="sw o" style="width:30px"></span>detour</span><span><span class="sw r" style="width:30px;border-top-width:8px"></span>marked A = 1</span></div>
+  </div>
+</div>
+<div class="body" style="position:absolute;left:88px;bottom:80px">A lands only where the attack went; a and c never touch h1→h6.</div>
+<button class="navbtn" data-goto="16" style="right:88px;bottom:80px">Stills: slide 16</button>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">T4 cases a/c · C3 + C2</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 0:29 · slot 10:00–10:30</p><p><span class="cue">[click to play, 25 s]</span> A replay of run R1. In a, s2–s3 turns red; our blue path stays, zero loss. In b, our path turns orange and comes back. In c, the flood takes s5, s3, s6; s5–s6 stays grey, and the small loss is h6's access link.</p><p><span class="cue">[on the end card]</span> Which part actually earns its place? We switched parts off.</p><p class="nnote">The replay is paused for 2 s at the case b block (stay 58.8 vs move 30.0). If it will not play: 16 + Enter, then back to 13. The forced s5-s6 run (C0 = 8, plateau 4.75, worst second 35%, also from h6's access link) is backup slide 20.</p></aside></section>
+<section class="slide " data-kind="main" data-title="What Each Part Buys Us: Beta Off, Link Down"><h2>What Each Part Buys Us: Beta Off, Link Down</h2>
+<div class="row" style="gap:40px;margin-top:60px">
+  <div class="card" style="width:1000px">
+    <div class="small muted" style="font-weight:700;margin-bottom:8px">Case b with a smaller anomaly weight β</div>
+    <table class="t num" style="width:100%;font-size:30px">
+      <tr><th style="text-transform:none">β</th><th>s2-s6 cost</th><th>h1→h6</th><th style="text-transform:none">WORST 1 s</th><th>after block</th></tr>
+      <tr><td>0</td><td>1.20×</td><td>stayed</td><td>30.4%</td><td class="blue"><b>0%</b></td></tr>
+      <tr><td>2</td><td>1.34×</td><td>stayed</td><td>30.1%</td><td class="blue"><b>0%</b></td></tr>
+      <tr style="background:#fff7d1"><td><b>30</b></td><td><b>3.15–3.16×*</b></td><td><b>moved</b></td><td>34.4–56.6%</td><td class="blue"><b>0%</b></td></tr>
+    </table>
+    <div class="small muted" style="margin-top:12px">* mean from 3 s after the block to the flood end (R1–R3); the plateau converges to (14+30)/14 = 3.14</div>
+  </div>
+  <div class="card step" data-step="1" style="flex:1">
+    <div class="small muted" style="font-weight:700">s2-s6 cut for 20 s</div>
+    <div style="font-size:84px;font-weight:800;line-height:1.1;margin-top:10px">7 ms</div>
+    <div class="body">to reroute · <b>11 / 71,515</b> lost<br>back 0.7 s after restore</div>
+    <div class="small muted" style="margin-top:22px;font-weight:700">h1→h6 path over the 80 s run</div>
+    <div style="display:flex;height:50px;border-radius:8px;overflow:hidden;font-size:21px;font-weight:700;color:#fff;margin-top:6px;text-align:center;line-height:50px">
+      <div style="flex:30.1;background:var(--main)">s1-s2-s6</div><div style="flex:20.7;background:var(--detour)">detour</div><div style="flex:29.2;background:var(--main)">back</div></div>
+    <div class="chip yellow" style="margin-top:20px;font-size:22px;font-weight:600;line-height:1.35;padding:8px 14px">Bug found: ready flag dropped on link-down → ARP ignored; fixed by latching ready (D13)</div>
+  </div>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Resilience · C3 + C2 + C1</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 0:28 · slot 10:30–11:00</p><p>With beta 0 or 2 the flow stays on s2–s6, yet loss after the block is still zero: blocking ends the loss. Beta guards against what an IP block misses, like spoofed sources.</p><p><span class="cue">[click]</span> Cutting s2–s6: rerouted in 7 milliseconds, 11 of 71,515 packets lost; the test also exposed a bug, now fixed.</p><p><b>H4 →</b> So every part earns its place. Where does the remaining loss come from? Kaiming?</p><p class="nnote">Price of β: the detour costs 3 more (22 vs 19), only while A = 1. Link-down: the link leaves the graph (cost ∞); reroute 7.3 ms after the link_down mark; 10.49 Mbps and 0.06% loss during the outage; the only lossy second is the one with the failure. D13: after a link-down fewer than 11 links were discovered, the controller fell back to “not ready” and ignored ARP, so hosts lost reachability; now ready is latched after the first full discovery.</p></aside></section>
+<section class="slide " data-kind="main" data-title="Where the Loss Lives: Limitations and Takeaways"><h2>Where the Loss Lives: Limitations and Takeaways</h2>
+<div class="small muted" style="font-weight:700;margin-bottom:8px">h1→h6 during a case b flood</div>
+<div style="display:flex;height:96px;border-radius:12px;overflow:hidden;font-size:26px;font-weight:700;color:#fff">
+  <div style="flex:3;background:#b9b8b1;display:flex;align-items:center;justify-content:center;color:#0b0b0b">normal: 10.5 Mbps, 0%</div>
+  <div style="flex:2.4;background:var(--attack);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2">1.5–3.8 s before detection:<br>all observed loss</div>
+  <div style="flex:3;background:var(--main);display:flex;align-items:center;justify-content:center">after the block: 0%</div>
+</div>
+<table class="t step" data-step="1" style="margin-top:34px;width:1300px">
+  <tr><th>Limitation</th><th>Next step</th></tr>
+  <tr><td>Detection delay 1.5–3.8 s</td><td>1 s polls or sFlow</td></tr>
+  <tr><td>Spoofed sources evade IP block</td><td>reroute + per-destination meters</td></tr>
+</table>
+<div class="row step" data-step="2" style="margin-top:40px;gap:30px">
+  <div class="card" style="flex:1"><div style="font-size:60px;font-weight:800" class="red">1.5–3.8 s</div><div class="body">to block, all nine floods</div></div>
+  <div class="card" style="flex:1"><div style="font-size:60px;font-weight:800" class="blue">0</div><div class="body">attack packets after block + 1 s</div></div>
+  <div class="card" style="flex:1"><div style="font-size:60px;font-weight:800" class="orange">2 reroutes</div><div class="body">away and back</div></div>
+</div>
+<div class="step" data-step="3" style="position:absolute;right:88px;bottom:80px;text-align:right">
+  <div style="font-size:76px;font-weight:800;line-height:1">Questions?</div>
+  <div class="small muted">Contributions & tools: slide 23</div></div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Critical analysis · C3 + C1</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:30 · slot 11:00–11:30</p><p>Thanks, Danze. Remember the forty-eight percent? Every lost packet fell in the red part of this bar: the 1.5 to 3.8 seconds before detection. So the limitation is detection delay, our weakest link; one-second polling or sFlow would shrink it, at the cost of more control traffic.</p><p><span class="cue">[click]</span> <b>H5 →</b> And where a source-IP block fails, against spoofed sources, the reroute is the remaining guard. Danze will close.</p><p><span class="who b">[Speaker B · Danze]</span> target 0:28 · slot 11:30–12:00</p><p>Thanks, Kaiming. Two more limits: the victim's own access link cannot be routed around, and our thresholds are tuned, not derived.</p><p><span class="cue">[click]</span> To sum up: in all nine floods, the attacker was blocked within 1.5 to 3.8 seconds. Blocking ends the loss, beta moves traffic off an attacked link, and hysteresis brings it back once. Thank you.</p><p><span class="cue">[click: Questions?]</span> Questions on detection, blocking and the setup go to Kaiming; cost, rerouting and the plots to me.</p><p class="nnote">The Q&A split is spoken only, not on screen. Other limits for Q&A: a partial sample can be learned into the baseline (backup 19); userspace OVS and no link delays in R1–R3 (backup 21).</p></aside></section>
+<section class="slide " data-kind="hidden" data-next="9" data-prev="8" data-title="Case b Demo: Four Stills"><h2>Case b Demo: Four Stills</h2><div style="display:grid;grid-template-columns:690px 690px;gap:8px 40px;justify-content:center;margin-top:-6px"><figure style="margin:0"><img src="../assets/video/demo_case_b_still_1.png" alt="still 1" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>1</b> Normal (4×): s1-s2-s6, 0% loss</figcaption></figure><figure style="margin:0"><img src="../assets/video/demo_case_b_still_2.png" alt="still 2" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>2</b> Block + reroute in one control step</figcaption></figure><figure style="margin:0"><img src="../assets/video/demo_case_b_still_3.png" alt="still 3" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>3</b> Paused: drop on 6 switches · A = 1 · detour</figcaption></figure><figure style="margin:0"><img src="../assets/video/demo_case_b_still_4.png" alt="still 4" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>4</b> Back on s1-s2-s6 · tcpdump: 0 packets</figcaption></figure></div><button class="navbtn" data-goto="9" style="right:88px;top:56px">Back to slide 9 →</button><div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · stills for slide 8</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target 0:55 · slot replaces slide 8</p><p>Use only if the video will not play. Same lines as slide 8, one still each: normal on s1, s2, s6; the flood and the block in one step; the paused frame with the three callouts; tcpdump sees zero attack packets, and the flow is back on the short path. Then the button returns to slide 9.</p></aside></section>
+<section class="slide " data-kind="hidden" data-next="13" data-prev="12" data-title="Replay of Run R1: Four Stills"><h2>Replay of Run R1: Four Stills</h2><div style="display:grid;grid-template-columns:690px 690px;gap:8px 40px;justify-content:center;margin-top:-6px"><figure style="margin:0"><img src="../assets/figures/replay_r1_still_1.png" alt="still 1" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>1</b> 60 s, a: s2-s3 marked, path stays</figcaption></figure><figure style="margin:0"><img src="../assets/figures/replay_r1_still_2.png" alt="still 2" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>2</b> 114 s, b: before detection</figcaption></figure><figure style="margin:0"><img src="../assets/figures/replay_r1_still_3.png" alt="still 3" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>3</b> 135 s: detour, s2-s6 ×3.14</figcaption></figure><figure style="margin:0"><img src="../assets/figures/replay_r1_still_4.png" alt="still 4" style="width:690px;height:388px;display:block;border-radius:8px;border:1.5px solid var(--line)"><figcaption class="small" style="margin-top:4px;line-height:1.25"><b>4</b> 200 s, c: s5-s6 stays grey</figcaption></figure></div><button class="navbtn" data-goto="13" style="right:88px;top:56px">Back to slide 13 →</button><div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · stills for slide 12</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target 0:29 · slot replaces slide 12</p><p>Use only if the replay will not play. a: s2–s3 marked, our blue path stays, zero loss. b: before detection, then the orange detour while s2–s6 holds at 3.14. c: s3–s5 and s3–s6 marked, s5–s6 grey, our path stays. Then back to slide 13.</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Backup: Task 5 Report Plots (R1), Throughput and RTT"><h2>Backup: Task 5 Report Plots (R1), Throughput and RTT</h2>
+<div class="row" style="gap:36px">
+  <figure style="margin:0;width:860px"><img src="../../report/source/figures/fig1_link_cost.png" alt="Link cost" style="width:860px;display:block">
+    <figcaption class="small muted">Link cost C/C0 of all monitored links: each attacked link spikes, holds (C0+30)/C0, returns.</figcaption></figure>
+  <div class="col" style="gap:14px;width:830px">
+    <figure style="margin:0"><img src="../../report/source/figures/fig2_packet_loss.png" alt="Packet loss" style="width:830px;display:block">
+      <figcaption class="small muted">h1→h6 loss per second: only before the case b block.</figcaption></figure>
+    <figure style="margin:0"><img src="../../report/source/figures/fig3_throughput.png" alt="Throughput" style="width:830px;display:block">
+      <figcaption class="small muted">h1→h6 throughput: 10.5 Mbps except the same seconds.</figcaption></figure>
+  </div>
+</div>
+<div class="card small" style="position:absolute;left:88px;right:88px;bottom:78px;padding:14px 22px">Case b lowest 1 s throughput <b>5.41 / 4.55 / 6.74 Mbps</b> (R1 / R2 / R3), otherwise 10.5 Mbps · R1 RTT 0.5 → 20.5 ms before the block: queueing only</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · T5</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target Q&A · slot backup</p><p>For questions on RTT and throughput: before detection s2–s6 carries about 39 Mbps of flood plus our 10 on a 40 Mbps link, so the queue fills. The extra RTT is all queueing; the container has no propagation delay. Mean loss over the 25 s flood, 5.67 / 4.20 / 1.87%, hides that the loss sits in a few seconds.</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Backup: Per-Case Before / During / After (R1, with R2 / R3)"><h2>Backup: Per-Case Before / During / After (R1, with R2 / R3)</h2>
+<table class="t nw" style="width:100%;font-size:24px">
+  <tr><th>case</th><th>attack</th><th>marked, plateau</th><th>detection R1/R2/R3</th><th>h1→h6 path</th><th>worst 1 s loss</th><th>mean loss in flood</th><th>lowest 1 s Mbps</th></tr>
+  <tr><td><b>a</b></td><td style="white-space:nowrap">h2→h3<br>s2-s3</td><td>s2-s3 ×4.0</td><td>3.4 / 2.2 / 3.5 s</td><td>stays s1-s2-s6</td><td>0 / 0 / 0%</td><td>0%</td><td>10.5</td></tr>
+  <tr><td><b class="red">b</b></td><td style="white-space:nowrap">h2→h6<br>s2-s6</td><td>s2-s6 ×3.14</td><td>3.8 / 2.6 / 1.5 s</td><td class="wrap"><span style="white-space:nowrap">→ s1-s2-s3-s6 at 115.6 s</span><br>back at 151.6 s (R1)</td><td>48.4 / 56.6 / 34.4%</td><td>5.67 / 4.20 / 1.87%</td><td>5.41 / 4.55 / 6.74</td></tr>
+  <tr><td><b>c</b></td><td style="white-space:nowrap">h5→h6<br>s5-s3-s6</td><td>s3-s5 ×4.33<br>s3-s6 ×5.29</td><td>1.7 / 3.0 / 1.8 s</td><td>stays s1-s2-s6</td><td>2.5 / 4.1 / 6.1%</td><td>0.12 / 0.45 / 0.31%</td><td>10.0 / 9.88 / 9.65</td></tr>
+</table>
+<div class="col small" style="gap:10px;margin-top:30px;line-height:1.4">
+  <div>Before every flood and after recovery: <b>0% loss, 10.5 Mbps</b>. Loss in every second ending ≥ 1 s after a block: <b>0%</b>.</div>
+  <div>Attack packets at the victim before the block: <b>3,608–14,251</b>; after block + 1 s: <b>0</b>. Drop rule on s2 (R1 b): n_packets 31,253.</div>
+  <div>h1→h6 return in case b: 39.8 / 38.6 / 39.9 s after flood start, i.e. ≈14 s after the flood. Every marked link back to baseline 13.3–15.3 s after the flood.</div>
+  <div>Stay vs move at the block: 58.78 / 29.97 (R1), 57.22 / 30.10 (R2), 55.34 / 30.22 (R3) · at the return 30.09 vs 24.5.</div>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · T4d/f · T5.2</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target Q&A · slot backup</p><p>For Task 4d/4f and 5.2 questions: path, loss, throughput, cost and recovery for each case. Only case b moves h1→h6, exactly twice per run (away and back).</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Backup: Why R1 Case b Took 3.8 s"><h2>Backup: Why R1 Case b Took 3.8 s</h2>
+<div class="row" style="gap:50px">
+  <div class="col" style="gap:26px;width:980px">
+    <div class="small muted" style="font-weight:700">h2 rows of the controller's per-source samples (R1)</div>
+    <table class="t mono tight" style="font-size:22px;width:100%;white-space:nowrap">
+      <tr><th>t</th><th>pkt/s</th><th>baseline b</th><th>threshold T</th><th>verdict</th></tr>
+      <tr><td>110.8 s</td><td>—</td><td>0.97</td><td>500.0</td><td>normal</td></tr>
+      <tr style="background:#fff7d1"><td>113.2 s</td><td>490.7</td><td>0.97 → 147.89</td><td>500.0 → 1045.61</td><td>&lt; 500 → learned</td></tr>
+      <tr><td>115.6 s</td><td class="red"><b>4993.7</b></td><td>147.89</td><td>1045.61</td><td class="red"><b>&gt; T → BLOCK</b></td></tr>
+    </table>
+    <div class="body">The first sample covered only part of the flood, so it stayed under the floor and was learned.</div>
+    <div class="card body" style="border-color:#b9d3f2"><b>Fix:</b> cap how far one sample can raise b, or require a full-interval sample.</div>
+  </div>
+  <figure class="fig" style="width:640px"><img src="../assets/figures/fig6_detector_h2.png" alt="Detector on h2" style="width:640px"></figure>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · T2</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target Q&A · slot backup</p><p>Samples come every 2.4 s (2 s poll plus a fixed 0.4 s wait). The flood began late in an interval, so the first sample saw only part of it: 490.7 pkt/s, under the 500 floor, and it was learned, raising b to 148 and T to 1,046. The next sample, 4,994 pkt/s, was still caught.</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Backup: Case c with s5–s6 Forced (C0 = 8)"><h2>Backup: Case c with s5–s6 Forced (C0 = 8)</h2>
+<div class="row" style="gap:50px">
+  <div class="col" style="gap:24px;width:820px">
+    <div class="card mono" style="font-size:25px">CEG_COST_OVERRIDE=5-6:8</div>
+    <div class="body">h5→h6 now takes <b>s5-s6</b> (8 &lt; 16)</div>
+    <table class="t" style="width:100%">
+      <tr><td>detection</td><td><b>1.5 s</b>, only s5-s6 marked</td></tr>
+      <tr><td>s5-s6 plateau</td><td><b>(8+30)/8 = 4.75</b> <span class="muted small">(4.76 = mean during the flood)</span></td></tr>
+      <tr><td>h1→h6</td><td>stays on s1-s2-s6</td></tr>
+      <tr><td>worst 1 s loss</td><td><b>35%</b>: h6's access link, the last hop cannot be routed around</td></tr>
+    </table>
+  </div>
+  <figure class="fig" style="width:860px;height:800px"><img src="../../results/exp-c-s5s6-cost8/figures/fig4_overview.png" alt="Forced s5-s6 run overview" style="max-height:800px"></figure>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · T4 case c</span></div><aside class="notes"><p><span class="who b">[Speaker B · Danze]</span> target Q&A · slot backup</p><p>If asked whether we avoided the assignment's s5–s6 case: we forced it with a cost override. The controller marked s5–s6, h1 did not need to move, and the remaining loss came from h6's own access link, which no reroute can avoid.</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Backup: Environment, VM Re-run, Live Demo Commands"><h2>Backup: Environment, VM Re-run, Live Demo Commands</h2>
+<div class="row" style="gap:40px">
+  <table class="t" style="width:820px;font-size:24px">
+    <tr><th></th><th style="white-space:nowrap">Container R1–R3</th><th style="white-space:nowrap">Mininet 2.3.0 VM</th></tr>
+    <tr><td class="d">switch</td><td>userspace OVS</td><td>kernel OVS, netem delays</td></tr>
+    <tr><td class="d">detection</td><td>1.5–3.8 s</td><td>2.2 / 1.6 / 3.8 s</td></tr>
+    <tr><td class="d">h1→h6 RTT</td><td>0.50 ms median</td><td>99.8 → 109.0 (detour) → 100.0 ms</td></tr>
+    <tr><td class="d">stay vs move</td><td style="white-space:nowrap">58.78 / 29.97 (R1)</td><td>54.96 / 30.20</td></tr>
+    <tr><td class="d">in flight after block</td><td>19–101, ≤ 28 ms</td><td>487–1,188, ≤ 0.53 s</td></tr>
+    <tr><td class="d">warm-up</td><td>5 samples</td><td>12 samples</td></tr>
+  </table>
+  <pre class="card mono" style="flex:1;font-size:19px;line-height:1.5;margin:0;white-space:pre-wrap">python3 -m unittest discover -s support/tests   # 18 tests
+sudo -E python3 code/experiments/run_experiment.py   # a,b,c, ~5 min
+
+# live demo, terminal 1
+CEG_WARMUP=12 ryu-manager --observe-links \
+  --ofp-tcp-listen-port 6633 code/controller/integrated_controller.py
+# terminal 2
+sudo -E mn --custom code/topology/ceg_mesh_topo.py --topo meshTopo \
+  --link tc --switch ovsk,protocols=OpenFlow13 --mac \
+  --controller remote,ip=127.0.0.1,port=6633
+mininet&gt; pingall
+mininet&gt; h6 iperf -s -u -i 1 &amp;
+mininet&gt; h1 iperf -c 10.0.0.6 -u -b 10M -t 600 &amp;
+mininet&gt; h2 hping3 --icmp --flood -d 1000 10.0.0.6 &amp;
+mininet&gt; sh ovs-ofctl -O OpenFlow13 dump-flows s2 | grep 5000
+mininet&gt; h6 timeout 3 tcpdump -n -i h6-eth0 icmp and src host 10.0.0.2</pre>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · setup</span></div><aside class="notes"><p><span class="who">[Speaker A · Kaiming]</span> target Q&A · slot backup</p><p>Routing uses only the C0 table, port statistics and A, so the missing link delays in the container do not change any decision; only absolute RTTs are small. On the VM with netem delays the same behaviour appears, with RTT 99.8 ms normally (98 ms expected) and 109.0 ms on the detour. With link delays the warm-up is 12 samples.</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Backup: Parameters, Design Decisions D1–D13, Code Map"><h2>Backup: Parameters, Design Decisions D1–D13, Code Map</h2>
+<div class="small" style="display:flex;flex-wrap:wrap;gap:10px 12px;margin:-8px 0 14px">
+  <span class="chip grey">poll 2 s + 0.4 s wait = sample every 2.4 s</span><span class="chip grey">detector EMA weight 0.3</span>
+  <span class="chip grey">link-load EMA weight 0.6</span><span class="chip grey">T = max(3b, b+4σ, 500) · warm-up 5</span>
+  <span class="chip grey">α 10 · β 30 · Rmax 40 Mbps</span><span class="chip grey">margin 2 · hold 10 s</span>
+  <span class="chip grey">unblock: drop &lt; 0.5T, 10 s quiet</span></div>
+<table class="t tight" style="width:100%;font-size:23px;line-height:1.2">
+  <tr><th style="width:70px">D</th><th>problem</th><th>our rule</th><th>code <span style="text-transform:none;letter-spacing:0">(integrated_controller.py unless noted)</span></th></tr><tr><td><b>D1</b></td><td>Reference cost table is an old 4-switch topology</td><td>C0 rewritten for the 11 links (=&nbsp;delay&nbsp;ms)</td><td class="mono" style="font-size:19px">sdn_logic.py BASE_COSTS :71</td></tr><tr><td><b>D2</b></td><td>Rules match eth_dst only: no source rate</td><td>match ipv4_src / dst / proto</td><td class="mono" style="font-size:19px">flow_stats_reply_handler :374</td></tr><tr><td><b>D3</b></td><td>Packet counted at every hop</td><td>count only at the ingress switch</td><td class="mono" style="font-size:19px">:374</td></tr><tr><td><b>D4</b></td><td>Victim's echo replies look like a flood</td><td>skip ICMP echo replies</td><td class="mono" style="font-size:19px">:374</td></tr><tr><td><b>D5</b></td><td>Update then compare: ≈21×, poisoned baseline</td><td>compare first, never learn anomalies</td><td class="mono" style="font-size:19px">AnomalyDetector.update :207</td></tr><tr><td><b>D6</b></td><td>Fixed 3× threshold</td><td>max(3b, b+4σ, 500) + warm-up</td><td class="mono" style="font-size:19px">threshold :194</td></tr><tr><td><b>D7</b></td><td>After the block R → 0: reroute not held</td><td>A = 1 while the drop rule counts, +&nbsp;10&nbsp;s</td><td class="mono" style="font-size:19px">_evaluate :423</td></tr><tr><td><b>D8</b></td><td>Attacker's 1 pps ping keeps hitting the rule</td><td>still attacking = drop rate ≥ 0.5T</td><td class="mono" style="font-size:19px">_evaluate :423</td></tr><tr><td><b>D9</b></td><td>Own load makes the current path dearer: flapping</td><td>what-if + margin 2</td><td class="mono" style="font-size:19px">_cost_graph :489 · _reroute_all :505</td></tr><tr><td><b>D10</b></td><td>Installed rules never change</td><td>reinstall egress first, delete stale</td><td class="mono" style="font-size:19px">_install_path :327 · _reroute :521</td></tr><tr><td><b>D11</b></td><td>Broadcast storm in the mesh</td><td>ignore packet-in until ready; ARP proxy</td><td class="mono" style="font-size:19px">_handle_arp :223 · _flood_to_hosts :249</td></tr><tr><td><b>D12</b></td><td>Same attacker h2 in a and b</td><td>auto-unblock after 10 s quiet</td><td class="mono" style="font-size:19px">_block :541 · _unblock :565</td></tr><tr><td><b>D13</b></td><td>Link-down drops 'ready': ARP ignored</td><td>latch ready after first discovery</td><td class="mono" style="font-size:19px">_refresh_topology :169</td></tr>
+</table>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · code</span></div><aside class="notes"><p><span class="who">[Kaiming + Danze]</span> target Q&A · slot backup</p><p>Use when asked to point at the code. [Speaker A · Kaiming] owns D2–D6, D8, D11, D12; [Speaker B · Danze] owns D1, D7, D9, D10, D13. Line numbers refer to code/controller/integrated_controller.py and code/controller/sdn_logic.py as submitted.</p></aside></section>
+<section class="slide " data-kind="backup" data-title="Contributions and Tools"><h2>Contributions and Tools</h2>
+<div class="row" style="gap:70px;margin-top:10px">
+  <div class="col" style="gap:26px;width:900px">
+    <div class="small muted" style="font-weight:700">Who did what</div>
+    <div class="card body"><b>Yang Kaiming</b> <span class="muted small">A0326309E · system &amp; detection</span><br>Topology and MiniEdit, the controller loop, anomaly detection and blocking, the experiment runs and the demo</div>
+    <div class="card body"><b>Chen Danze</b> <span class="muted small">A0328226E · routing &amp; results</span><br>Dynamic link cost, rerouting and recovery, the Task 5 analysis and figures, the extended experiments</div>
+  </div>
+  <div class="col" style="gap:12px;flex:1">
+    <div class="small muted" style="font-weight:700">Tools</div><div class="body"><b>Ryu 4.34</b> <span class="muted small">controller, OpenFlow 1.3</span></div><div class="body"><b>Mininet 2.3.0</b> <span class="muted small">network emulation, MiniEdit</span></div><div class="body"><b>Open vSwitch</b> <span class="muted small">switches</span></div><div class="body"><b>iperf</b> <span class="muted small">legitimate UDP traffic, loss</span></div><div class="body"><b>hping3</b> <span class="muted small">ICMP flood</span></div><div class="body"><b>tcpdump</b> <span class="muted small">victim capture</span></div><div class="body"><b>matplotlib</b> <span class="muted small">figures</span></div><div class="body"><b>ffmpeg</b> <span class="muted small">video encoding</span></div><div class="body"><b>QEMU</b> <span class="muted small">Mininet VM</span></div>
+  </div>
+</div>
+<div class="foot"><span class="num"></span><span class="mid">Group 5 · CEG5101 CA2</span><span class="tag">Backup · contributions</span></div><aside class="notes"><p><span class="who">[Kaiming + Danze]</span> target Q&A · slot backup</p><p>Each person answers in one sentence, matching the two lines on this slide; [Speaker A · Kaiming] first.</p></aside></section>
+</div></div>
+<div id="notes-panel" class="ui"></div>
+<div id="timer" class="ui">00:00</div>
+<div id="jump" class="ui"></div>
+<div id="toast" class="ui"></div>
+<div id="black" class="ui"></div>
+<div id="help" class="ui"><b>Keys</b><br><kbd>→</kbd> <kbd>Space</kbd> <kbd>PgDn</kbd> next step / slide · <kbd>←</kbd> <kbd>PgUp</kbd> back · <kbd>Home</kbd> <kbd>End</kbd><br><kbd>number</kbd> + <kbd>Enter</kbd> go to slide · <kbd>N</kbd> notes · <kbd>P</kbd> presenter view · <kbd>T</kbd> timer · <kbd>R</kbd> reset timer<br><kbd>H</kbd> include / skip backup slides · <kbd>K</kbd> play / pause video · <kbd>B</kbd> black screen · <kbd>F</kbd> full screen · <kbd>?</kbd> this help</div>
+<script>
+(function(){
+'use strict';
+var stage=document.getElementById('stage');
+var slides=[].slice.call(stage.querySelectorAll('.slide'));
+var N=slides.length, cur=0, step=0, showBackup=false, typed='', t0=null, presenter=null, lastKey='';
+var MAINCOUNT=slides.filter(function(s){return s.dataset.kind==='main';}).length;
+slides.forEach(function(s,i){
+  var m=0; [].forEach.call(s.querySelectorAll('[data-step]'),function(e){m=Math.max(m,+e.dataset.step);});
+  [].forEach.call(s.querySelectorAll('[data-play-step]'),function(e){m=Math.max(m,+e.getAttribute('data-play-step'));});
+  s.dataset.max=m; s.classList.add('kind-'+s.dataset.kind);
+  var num=s.querySelector('.foot .num');
+  if(num){ num.innerHTML=(i+1)+(s.dataset.kind==='main'?' <small>/ '+MAINCOUNT+'</small>':' <small>· '+(s.dataset.kind==='hidden'?'hidden':'backup')+'</small>'); }
+});
+function $(id){return document.getElementById(id);}
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._h);toast._h=setTimeout(function(){t.classList.remove('show');},1800);}
+function inSeq(i){var k=slides[i].dataset.kind;return k==='main'||(k==='backup'&&showBackup);}
+function fit(){
+  var W=window.innerWidth,H=window.innerHeight;
+  if(document.body.classList.contains('notes-open')) H=Math.round(H*0.64);
+  var sc=Math.min(W/1920,H/1080);
+  stage.style.transform='translate('+((W-1920*sc)/2)+'px,'+((H-1080*sc)/2)+'px) scale('+sc+')';
+}
+function nextPos(i,st){
+  if(st<+slides[i].dataset.max) return [i,st+1];
+  if(inSeq(i)){ for(var j=i+1;j<N;j++) if(inSeq(j)) return [j,0]; return null; }
+  if(slides[i].dataset.next) return [+slides[i].dataset.next-1,0];
+  return i+1<N?[i+1,0]:null;
+}
+function prevPos(i,st){
+  if(st>0) return [i,st-1];
+  if(inSeq(i)){ for(var j=i-1;j>=0;j--) if(inSeq(j)) return [j,+slides[j].dataset.max]; return null; }
+  if(slides[i].dataset.prev) return [+slides[i].dataset.prev-1,0];
+  return i>0?[i-1,+slides[i-1].dataset.max]:null;
+}
+function videoState(){
+  slides.forEach(function(s,i){
+    [].forEach.call(s.querySelectorAll('video'),function(v){
+      if(i!==cur){ if(!v.paused) v.pause(); return; }
+      if(v.hasAttribute('data-loop')){ var p=v.play(); if(p&&p.catch)p.catch(function(){}); return; }
+      var ps=v.getAttribute('data-play-step');
+      if(ps!==null){
+        ps=+ps;
+        if(step>=ps && lastKey!==(cur+':'+step) && step===ps && v.paused && !v.ended){ var q=v.play(); if(q&&q.catch)q.catch(function(){}); }
+        if(step<ps && !v.paused) v.pause();
+      }
+    });
+  });
+}
+function render(){
+  slides.forEach(function(s,i){s.classList.toggle('active',i===cur);});
+  var s=slides[cur];
+  [].forEach.call(s.querySelectorAll('[data-step]'),function(e){e.classList.toggle('on',+e.dataset.step<=step);});
+  videoState(); lastKey=cur+':'+step;
+  var np=$('notes-panel'); var nt=s.querySelector('.notes');
+  np.innerHTML='<div class="nhead">Slide '+(cur+1)+' · '+(s.dataset.title||'')+(+s.dataset.max?' · step '+step+' / '+s.dataset.max:'')+'</div>'+(nt?nt.innerHTML:'<p>(no notes)</p>');
+  try{ history.replaceState(null,'','#'+(cur+1)+(step?'.'+step:'')); }catch(e){}
+  updatePresenter();
+}
+function go(p){ if(!p) return; cur=p[0]; step=p[1]; render(); }
+function next(){ if(t0===null && cur===0) startTimer(); go(nextPos(cur,step)); }
+function prev(){ go(prevPos(cur,step)); }
+function jump(n){ if(n>=1&&n<=N){ go([n-1,0]); } else toast('No slide '+n); }
+function first(){ for(var j=0;j<N;j++) if(inSeq(j)) return go([j,0]); }
+function last(){ for(var j=N-1;j>=0;j--) if(inSeq(j)) return go([j,+slides[j].dataset.max]); }
+function curVideo(){ var vs=slides[cur].querySelectorAll('video:not([data-loop])'); return vs.length?vs[0]:null; }
+function toggleVideo(v){ v=v||curVideo(); if(!v) return; if(v.paused){ var p=v.play(); if(p&&p.catch)p.catch(function(){}); } else v.pause(); }
+/* timer */
+function fmt(ms){ var s=Math.floor(ms/1000),m=Math.floor(s/60); s%=60; return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
+function startTimer(){ if(t0===null) t0=Date.now(); }
+function tick(){
+  var txt=t0===null?'00:00':fmt(Date.now()-t0);
+  $('timer').textContent=txt;
+  if(presenter&&!presenter.closed){ var e=presenter.document.getElementById('pv-timer'); if(e) e.textContent=txt;
+    var c=presenter.document.getElementById('pv-clock'); if(c) c.textContent=new Date().toTimeString().slice(0,5); }
+}
+setInterval(tick,500);
+/* presenter view */
+function cloneInto(doc,host,i,st){
+  host.innerHTML='';
+  if(i===null){ host.innerHTML='<div style="font:600 60px var(--font);color:#999;padding:120px">End of sequence</div>'; return; }
+  var c=doc.importNode(slides[i],true); c.classList.add('active');
+  [].forEach.call(c.querySelectorAll('[data-step]'),function(e){e.classList.toggle('on',+e.dataset.step<=st);});
+  [].forEach.call(c.querySelectorAll('video'),function(v){ var img=doc.createElement('img'); img.src=v.getAttribute('poster')||'';
+    img.style.cssText='width:100%;height:100%;object-fit:contain;display:block'; v.parentNode.replaceChild(img,v); });
+  [].forEach.call(c.querySelectorAll('.notes,.navbtn'),function(e){e.remove();});
+  host.appendChild(c);
+}
+function pvFit(){
+  if(!presenter||presenter.closed) return; var d=presenter.document;
+  [['pv-cur','pv-cur-stage'],['pv-next','pv-next-stage']].forEach(function(p){
+    var f=d.getElementById(p[0]),st=d.getElementById(p[1]); if(!f||!st) return;
+    var sc=f.clientWidth/1920; st.style.transform='scale('+sc+')'; f.style.height=(1080*sc)+'px'; });
+}
+function updatePresenter(){
+  if(!presenter||presenter.closed) return; var d=presenter.document;
+  var np=nextPos(cur,step);
+  cloneInto(d,d.getElementById('pv-cur-stage'),cur,step);
+  cloneInto(d,d.getElementById('pv-next-stage'),np?np[0]:null,np?np[1]:0);
+  var s=slides[cur], nt=s.querySelector('.notes');
+  d.getElementById('pv-notes').innerHTML='<div class="nhead">Slide '+(cur+1)+' · '+(s.dataset.title||'')+(+s.dataset.max?' · step '+step+' / '+s.dataset.max:'')+'</div>'+(nt?nt.innerHTML:'');
+  d.getElementById('pv-next-label').textContent=np?(np[0]===cur?'Next: step '+np[1]+' on this slide':'Next: slide '+(np[0]+1)):'Next: (end)';
+  pvFit();
+}
+function openPresenter(){
+  if(presenter&&!presenter.closed){ presenter.focus(); return; }
+  presenter=window.open('','ceg5101_presenter','width=1500,height=900');
+  if(!presenter){ toast('Pop-up blocked. Allow pop-ups, or use N (notes) and T (timer).'); return; }
+  var css=document.getElementById('deck-css').textContent;
+  var base=location.href.split('#')[0];
+  var html='<!doctype html><html><head><meta charset="utf-8"><title>Presenter view</title><base href="'+base+'">'+
+   '<style>'+css+'body{overflow:auto;background:#f1f0ec}'+
+   '.pv{display:grid;grid-template-columns:62% 1fr;gap:18px;padding:16px;height:100vh;box-sizing:border-box}'+
+   '.pvf{position:relative;overflow:hidden;background:#fcfcfb;border:1px solid #d9d8d2;border-radius:6px}'+
+   '.pvs{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}'+
+   '.pvs .slide{display:block}'+
+   '.side{display:flex;flex-direction:column;gap:12px;min-height:0}'+
+   '.bar{display:flex;gap:12px;align-items:center;font:600 18px var(--font)}'+
+   '.bar button{font:600 18px var(--font);padding:6px 14px;border-radius:8px;border:1.5px solid #ccc;background:#fff;cursor:pointer}'+
+   '#pv-timer{font:800 44px var(--mono)} #pv-clock{font:600 22px var(--mono);color:#777}'+
+   '#pv-notes{background:#fff;border:1px solid #d9d8d2;border-radius:6px;padding:14px 18px;font-size:20px;line-height:1.5;overflow:auto;flex:1;min-height:0}'+
+   '.lab{font:700 15px var(--font);text-transform:uppercase;letter-spacing:.05em;color:#777}'+
+   '</style></head><body>'+
+   '<div class="pv"><div style="display:flex;flex-direction:column;gap:10px;min-height:0">'+
+   '<div class="lab">Current</div><div class="pvf" id="pv-cur"><div class="pvs" id="pv-cur-stage"></div></div>'+
+   '<div id="pv-notes"></div></div>'+
+   '<div class="side"><div class="bar"><span id="pv-timer">00:00</span><span id="pv-clock"></span>'+
+   '<button id="pv-reset">Reset timer</button></div>'+
+   '<div class="bar"><button id="pv-prev">&#8592; Back</button><button id="pv-nextb">Next &#8594;</button><button id="pv-vid">Play / pause video</button></div>'+
+   '<div class="lab" id="pv-next-label">Next</div><div class="pvf" id="pv-next"><div class="pvs" id="pv-next-stage"></div></div>'+
+   '<div class="lab">Keys work in this window too: Right / Left, number + Enter, H, K</div></div></div></body></html>';
+  var d=presenter.document; d.open(); d.write(html); d.close();
+  d.addEventListener('keydown',onKey);
+  d.getElementById('pv-prev').onclick=prev; d.getElementById('pv-nextb').onclick=next;
+  d.getElementById('pv-reset').onclick=function(){t0=Date.now();tick();};
+  d.getElementById('pv-vid').onclick=function(){toggleVideo();};
+  presenter.addEventListener('resize',pvFit);
+  startTimer(); updatePresenter(); setTimeout(pvFit,60); tick();
+}
+/* keys */
+function onKey(e){
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  var k=e.key;
+  if(/^[0-9]$/.test(k)){ typed+=k; $('jump').textContent='go to '+typed; $('jump').classList.add('show'); e.preventDefault(); return; }
+  if(k==='Enter'&&typed){ var n=parseInt(typed,10); typed=''; $('jump').classList.remove('show'); jump(n); e.preventDefault(); return; }
+  if(k==='Escape'){ typed=''; $('jump').classList.remove('show'); $('help').classList.remove('show'); $('black').classList.remove('show'); return; }
+  if(typed&&k==='Backspace'){ typed=typed.slice(0,-1); $('jump').textContent='go to '+typed; if(!typed)$('jump').classList.remove('show'); e.preventDefault(); return; }
+  switch(k){
+    case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': case 'Enter': next(); break;
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace': prev(); break;
+    case 'Home': first(); break;
+    case 'End': last(); break;
+    case 'n': case 'N': document.body.classList.toggle('notes-open'); fit(); break;
+    case 'p': case 'P': openPresenter(); break;
+    case 't': case 'T': startTimer(); $('timer').classList.toggle('show'); tick(); break;
+    case 'r': case 'R': t0=Date.now(); tick(); toast('Timer reset'); break;
+    case 'h': case 'H': showBackup=!showBackup; toast(showBackup?'Backup slides 17–23 are now in the sequence':'Backup slides skipped (reach them by number + Enter)'); updatePresenter(); break;
+    case 'k': case 'K': toggleVideo(); break;
+    case 'b': case 'B': case '.': $('black').classList.toggle('show'); break;
+    case 'f': case 'F': if(!document.fullscreenElement){ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } else document.exitFullscreen(); break;
+    case '?': $('help').classList.toggle('show'); break;
+    default: return;
+  }
+  e.preventDefault();
+}
+document.addEventListener('keydown',onKey);
+window.addEventListener('resize',fit);
+/* mouse */
+stage.addEventListener('click',function(e){
+  var t=e.target;
+  if(t.closest('.navbtn')){ jump(+t.closest('.navbtn').dataset.goto); e.stopPropagation(); return; }
+  if(t.closest('.vid')){ var v=t.closest('.vid').querySelector('video'); if(v&&!v.hasAttribute('data-loop')) toggleVideo(v); return; }
+  if(t.closest('a')) return;
+  next();
+});
+[].forEach.call(stage.querySelectorAll('video'),function(v){
+  var box=v.closest('.vid');
+  v.addEventListener('play',function(){box.classList.add('playing');});
+  v.addEventListener('pause',function(){box.classList.remove('playing');});
+});
+window.addEventListener('beforeunload',function(){ if(presenter&&!presenter.closed) presenter.close(); });
+/* start */
+var h=(location.hash||'').replace('#','').split('.');
+if(h[0]&&+h[0]>=1&&+h[0]<=N){ cur=+h[0]-1; step=Math.min(+(h[1]||0),+slides[cur].dataset.max); }
+fit(); render(); tick();
+window.deck={go:function(i,s){go([i-1,s||0]);},next:next,prev:prev,state:function(){return {slide:cur+1,step:step,backup:showBackup};}};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "args": {
+    "scenarios": "",
+    "baseline": 30.0,
+    "attack": 25,
+    "recover": 30.0,
+    "iperf_rate": "10M",
+    "attack_size": 1000,
+    "fail_link": "s2-s6",
+    "fail_for": 20.0,
+    "out": "results/exp-linkfail-s2s6",
+    "controller": "auto",
+    "ryu_manager": "/tmp/claude-0/ryuenv/bin/ryu-manager",
+    "controller_ip": "127.0.0.1",
+    "controller_port": 6633,
+    "datapath": "auto",
+    "delay": "auto",
+    "plot_python": "/tmp/claude-0/ryuenv/bin/python",
+    "cli": false
+  },
+  "datapath": "user",
+  "delay_emulated": false,
+  "started": "2026-10-22 13:33:35 UTC",
+  "pingall_loss_pct": [
+    0.0,
+    0.0
+  ],
+  "finished": "2026-10-22 13:35:14 UTC"
+}
